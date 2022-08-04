@@ -1,0 +1,71 @@
+Designer
+( instruction ) Feeder / Controller / Loader / Handler
+Plotter
+
+
+ ===============
+ 
+ ┌─= instruction file =──<                    [Refresh] >─┐
+ │                                                        │
+ └> [file1.dri                          v]       [Load] >─┤
+                                                          │
+    ·filename:           Thissuperfileverylongname.dri  <─┤
+    ·header:                                      none  <─┤
+    ·version:                                        3  <─┤
+    ·drawcount:                             2298e39873  <─┤
+                                                          │
+ ┌─= Serial Port =──<                                     │                                                         
+ │                                                        │
+ └> [/dev/ttyACM0                       v]   [ Connect] >─┤
+                                                          │
+    ┌─────────────────────────────────────────────────┐   │
+M  ┌┤                                                 ├┐  │
+o  ││                                                 ││──┤
+N  ││                                                 ││──│
+i  ││                                                 ││──┤
+T  ││                                                 ││──┤
+o  ││                                                 ││──┤
+R  └┤                                                 ├┘  │
+    │                                                 │   │
+    │                                                 │   │
+    └─────────────────────────────────────────────────┘   │
+
+===========================================================
+               Draw Instruction Loader v1.0               
+                                                          
+┌─> [file1.dri                          ] ────> [Load] >──┐
+│                                                         │
+├─> [/dev/ttyACM0                       ] ─> [Connect] >──┤
+│                                                         │
+└── [Refresh]                             [RUN] [STOP] >──┤
+                                                          │                                                          │
+                                                          │                                                          │
+    filename:            Thissuperfileverylongname.dri <──┤
+    header:                                       none <──┤
+    version:                                         3 <──┤
+    drawcount:                              2298e39873 <──┤
+                                                          │
+    instructions sent:                             0/0 <──┤
+                                                          │
+    ┌─────────────────────────────────────────────────┐   │
+   ┌┤                                                 ├┐  │
+M  ││                                                 ││──┤
+o  ││                                                 ││──│
+N  ││                                                 ││──┤
+i  ││                                                 ││──┤
+T  ││                                                 ││──┤
+o  ││                                                 ││  │
+R  ││                                                 ││  │
+   └┤                                                 ├┘  │
+    └─────────────────────────────────────────────────┘   │
+
+
+
+
+
+
+
+(R)
+
+afghijklmnqtuvwxyzXY`-~!@{}|
+▒°±#␋┘┐┌└┼─├┤┴┬│≤≥||◆^·!@π£≠

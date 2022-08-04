@@ -1,0 +1,26 @@
+            NCurses.MoveWindowAddString(MainWindow, top+0 , left, "lq>                                       qqqq>        >qqk");
+            NCurses.MoveWindowAddString(MainWindow, top+1 , left, "x                                                         x");
+            NCurses.MoveWindowAddString(MainWindow, top+2 , left, "tq>                                       q>           >qqu");
+            NCurses.MoveWindowAddString(MainWindow, top+3 , left, "x                                                         x");
+            NCurses.MoveWindowAddString(MainWindow, top+4 , left, "mqq                                                    >qqu");
+            NCurses.MoveWindowAddString(MainWindow, top+5 , left, "                                                          x");                                                          x
+            NCurses.MoveWindowAddString(MainWindow, top+6 , left, "                                                          x");                                                          x
+            NCurses.MoveWindowAddString(MainWindow, top+7 , left, "                                                       <qqu");
+            NCurses.MoveWindowAddString(MainWindow, top+8 , left, "                                                       <qqu");
+            NCurses.MoveWindowAddString(MainWindow, top+9 , left, "                                                       <qqu");
+            NCurses.MoveWindowAddString(MainWindow, top+10, left, "                                                       <qqu");
+            NCurses.MoveWindowAddString(MainWindow, top+11, left, "                                                          x");
+            NCurses.MoveWindowAddString(MainWindow, top+12, left, "                                                       <qqu");
+            NCurses.MoveWindowAddString(MainWindow, top+13, left, "                                                          x");
+            NCurses.MoveWindowAddString(MainWindow, top+14, left, "    lqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk   x");
+            NCurses.MoveWindowAddString(MainWindow, top+15, left, "   lu                                                 tk  x");
+            NCurses.MoveWindowAddString(MainWindow, top+16, left, "   xx                                                 xxqqu");
+            NCurses.MoveWindowAddString(MainWindow, top+17, left, "   xx                                                 xxqqx");
+            NCurses.MoveWindowAddString(MainWindow, top+18, left, "   xx                                                 xxqqu");
+            NCurses.MoveWindowAddString(MainWindow, top+19, left, "   xx                                                 xxqqu");
+            NCurses.MoveWindowAddString(MainWindow, top+20, left, "   xx                                                 xxqqu");
+            NCurses.MoveWindowAddString(MainWindow, top+21, left, "   xx                                                 xx  x");
+            NCurses.MoveWindowAddString(MainWindow, top+22, left, "   xx                                                 xx  x");
+            NCurses.MoveWindowAddString(MainWindow, top+23, left, "   mu                                                 tj  x");
+            NCurses.MoveWindowAddString(MainWindow, top+24, left, "    mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj   x");
+

@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/robber/DrawMachineProject/DMP_Loader/src/DMP_Loader/loader.csproj": {}
+  },
+  "projects": {
+    "/home/robber/DrawMachineProject/DMP_Loader/src/DMP_Loader/loader.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/robber/DrawMachineProject/DMP_Loader/src/DMP_Loader/loader.csproj",
+        "projectName": "loader",
+        "projectPath": "/home/robber/DrawMachineProject/DMP_Loader/src/DMP_Loader/loader.csproj",
+        "packagesPath": "/home/robber/.nuget/packages/",
+        "outputPath": "/home/robber/DrawMachineProject/DMP_Loader/src/DMP_Loader/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/robber/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.Extensions.DependencyModel": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "System.IO.Ports": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/home/robber/.dotnet/sdk/6.0.302/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
