@@ -28,10 +28,10 @@ The payload is interleaved with a 0x00 byte spacer.
 |20 | 1 | linetype  | uint8 |
 |22 | 1 | x direction  | int8 |
 |24 | 1 | y direction  | int8 |
-|26 | 4 | start X  | int32 |
-|31 | 4 | start Y  | int32 |
-|36 | 4 | end X  | int32 |
-|41 | 4 | end Y  | int32 |
+|26 | 4 | start X  | int64 |
+|31 | 4 | start Y  | int64 |
+|36 | 4 | end X  | int64 |
+|41 | 4 | end Y  | int64 |
 |46 | 8 | delta X  | int64 |
 |55 | 8 | delta Y  | int64 |
 |64 | 8 | delta XX  | int64 |
