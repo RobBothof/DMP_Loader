@@ -28,16 +28,16 @@ The payload is interleaved with a 0x00 byte spacer.
 |20 | 1 | linetype  | uint8 |
 |22 | 1 | x direction  | int8 |
 |24 | 1 | y direction  | int8 |
-|26 | 4 | start X  | int64 |
-|31 | 4 | start Y  | int64 |
-|36 | 4 | end X  | int64 |
-|41 | 4 | end Y  | int64 |
-|46 | 8 | delta X  | int64 |
-|55 | 8 | delta Y  | int64 |
-|64 | 8 | delta XX  | int64 |
-|73 | 8 | delta YY  | int64 |
-|82 | 8 | delta XY | int64 |
-|91 | 8 | error  | int64 |
-|100 | 8 | steps  | int64 |
-|108 | 4 | checksum | int32 |
+|26 | 8 | start X  | int64 |
+|35 | 8 | start Y  | int64 |
+|44 | 8 | end X  | int64 |
+|53 | 8 | end Y  | int64 |
+|62 | 8 | delta X  | int64 |
+|71 | 8 | delta Y  | int64 |
+|80 | 8 | delta XX  | int64 |
+|89 | 8 | delta YY  | int64 |
+|98 | 8 | delta XY | int64 |
+|107 | 8 | error  | int64 |
+|116 | 8 | steps  | int64 |
+|124 | 4 | checksum | int32 |
 
