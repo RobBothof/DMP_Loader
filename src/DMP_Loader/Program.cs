@@ -15,36 +15,8 @@ namespace Loader {
         public Int64 sendIndex;
     }
 
-    //order from high bytecount values to low, for packed byte array
-    public struct DrawInstruction {
-        public Int64 index;
-        public Int64 steps;
-        public Int64 error;
-        public Int64 deltaXY;
-        public Int64 deltaYY;
-        public Int64 deltaXX;
-        public Int64 deltaY;
-        public Int64 deltaX;
-        public Int32 endY;
-        public Int32 endX;
-        public Int32 startY;
-        public Int32 startX;
-        public sbyte dirY;
-        public sbyte dirX;
-        public byte type;
-
-        //precalc the amount of steps needed ? so we'll know where we are at the curve
-        //the curve's length etc
-
-    }
-
     class Program {
-
-        //file
         private DrawInstructionFileInfo _driFileInfo;
-        private List<DrawInstruction> _drawInstructions = new List<DrawInstruction>();
-
-        //serial
         public static Queue<String> SerialMonitor = new Queue<string>();
         private SerialPort _serialPort = new SerialPort();
         private byte[] _serialMessageData = new byte[0];
@@ -83,6 +55,10 @@ namespace Loader {
         ScrollWindow fileWindow = new ScrollWindow(15, 37, 1, 5);
         ScrollWindow serialWindow = new ScrollWindow(15, 37, 3, 5);
 
+        static int Main(string[] args) {
+            return new Program().Run();
+        }
+
         int Run() {
             //
             _driFileInfo.fileheader = "none";
@@ -117,10 +93,6 @@ namespace Loader {
             return 1;
         }
 
-        static int Main(string[] args) {
-            return new Program().Run();
-        }
-
         void RefreshFilesAndSerial() {
             String lastfile = fileWindow.getFullSelected();
             fileWindow.elements = Directory.GetFiles("/home/robber/drawings", "*.dri");
@@ -131,7 +103,145 @@ namespace Loader {
             serialWindow.reselect(lastport);
         }
 
+        void ConnectSerialPort(String portname) {
+            if (!_serialPort.IsOpen) {
+                _serialPort = new SerialPort();
+                _serialPort.PortName = portname;
+                _serialPort.BaudRate = 115200;
+                _serialPort.Parity = Parity.None;
+                _serialPort.StopBits = StopBits.One;
+                _serialPort.DataBits = 8;
+                _serialPort.Handshake = Handshake.None;
+                _serialPort.RtsEnable = true;
+                _serialPort.DtrEnable = true;
+                try {
+                    _serialPort.Open();
+                    serialMonitorAdd($"Connecting to: {portname} at 115200");
+                } catch {
+                    // Console.WriteLine("Error opening serialPort.");
+                    serialMonitorAdd("Error opening serialPort.");
+                }
+            } else {
+                // Console.WriteLine("SerialPort is already open.");
+                serialMonitorAdd("SerialPort is already open.");
+            }
+        }
 
+        void DisConnectSerialPort() {
+            serialMonitorAdd($"Disconnected from: {_serialPort.PortName}");
+            if (_serialPort.IsOpen) _serialPort.Close();
+        }
+
+        void serialMonitorAdd(string s) {
+            SerialMonitor.Enqueue(s);
+            if (SerialMonitor.Count > 10) {
+                SerialMonitor.Dequeue();
+            }
+            NCurses.ClearWindow(SerialMonitorWindow);
+            for (int i = 0; i < Math.Min(10, SerialMonitor.Count); i++) {
+                NCurses.MoveWindowAddString(SerialMonitorWindow, i, 0, SerialMonitor.ToArray()[Math.Max(10, SerialMonitor.Count) - 10 + i]);
+            }
+            NCurses.WindowRefresh(SerialMonitorWindow);
+            //redraw serial window
+        }
+
+        void checkSerial() {
+            if (_serialPort.IsOpen) {
+                int b = _serialPort.BytesToRead;
+                if (b > 0) {
+                    String s = _serialPort.ReadLine();
+                    if (s.Length > 0) {
+                        if (s[0] == '@') {
+                            //we have a data request
+
+                            Int64 index = Int64.Parse(s.Split('@', 3)[1]);
+                            if (running) {
+                                SendInstruction(index);
+                            }
+                        }
+                        serialMonitorAdd(s);
+                    }
+                }
+            }
+        }
+
+        void LoadFileData() {
+            if (File.Exists(fileWindow.getFullSelected())) {
+                _driFileInfo.filename = fileWindow.getFullSelected();
+                using (FileStream fileStream = new FileStream(fileWindow.getFullSelected(), FileMode.Open)) {
+                    byte[] tempbuffer = new byte[42];
+                    // Write the data to the file, byte by byte.
+                    fileStream.Seek(0, SeekOrigin.Begin);
+                    fileStream.Read(tempbuffer);
+
+                    _driFileInfo.fileheader = System.Text.Encoding.UTF8.GetString(tempbuffer, 0, 20);
+                    _driFileInfo.version = BitConverter.ToInt32(tempbuffer, 20);
+                    _driFileInfo.count = BitConverter.ToInt32(tempbuffer, 24);
+                    _driFileInfo.start = BitConverter.ToInt64(tempbuffer, 32);
+                    _driFileInfo.size = tempbuffer[40];
+                }
+            }
+            _driFileInfo.index = 0;
+            _driFileInfo.sendIndex = 0;
+        }
+
+        void SendInstruction(Int64 index) {
+            //open one drawinstruction, check it, send to serial
+            //Keep Track and Display Progress
+
+            if (File.Exists(fileWindow.getFullSelected())) {
+                if (index < _driFileInfo.count) {
+                    _driFileInfo.filename = fileWindow.getFullSelected();
+                    byte[] tempbuffer = new byte[_driFileInfo.size];
+                    using (FileStream fileStream = new FileStream(fileWindow.getFullSelected(), FileMode.Open)) {
+                        fileStream.Seek(_driFileInfo.start + _driFileInfo.size * index, SeekOrigin.Begin);
+                        fileStream.Read(tempbuffer);
+                    }
+                    // verify drawinstruction
+                    bool msgOK = true;
+                    int numbytes = 0;
+                    int checksum = 0;
+                    for (int i = 0; i < tempbuffer.Length; i++) {
+                        if (msgOK) {
+                            if (i < 10) {
+                                if (tempbuffer[i] != 0xFF) {
+                                    msgOK = false;
+                                }
+                            }
+                            if (i == 10) {
+                                numbytes = tempbuffer[10];
+                            }
+                            if (i > 10 && i < 11 + numbytes) {
+                                checksum += tempbuffer[i];
+                            }
+                            if (i == 11 + numbytes) {
+                                if (checksum != BitConverter.ToInt32(tempbuffer, i)) msgOK = false;
+                            }
+                        }
+                    }
+
+                    if (msgOK) {
+                        // Console.WriteLine($"file checksum {checksum} is ok! sending instruction");
+                        if (_serialPort.IsOpen) {
+                            _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
+                            _serialLastSendBytes = BitConverter.ToString(tempbuffer);
+                            // _driFileInfo.index=index;
+                            _driFileInfo.sendIndex = index + 1;
+                            DrawMainWindowFileInfo();
+                            NCurses.WindowRefresh(MainWindow);
+                        } else {
+                            _serialLastSendBytes = "SerialPort is disconnected.";
+                        }
+                    } else {
+                        Console.WriteLine($"file checksum {checksum}is bad! possible file corruption, aborting..");
+                    }
+
+                }
+            }
+
+
+        }        
+    
 
         void InitGui() {
             NCurses.NoDelay(Screen, true);
@@ -500,8 +610,6 @@ namespace Loader {
             NCurses.WindowRefresh(SerialMonitorWindow);
         }
 
-
-
         void DrawButton(IntPtr win, uint color, string text) {
             NCurses.WindowBackground(win, color);
             NCurses.MoveWindowAddString(win, 0, 1, text);
@@ -559,145 +667,7 @@ namespace Loader {
             NCurses.MoveWindowAddString(MainWindow, top + 11, left + 24, _driFileInfo.sendIndex.ToString().PadLeft(30, ' '));
         }
 
-        void ConnectSerialPort(String portname) {
-            if (!_serialPort.IsOpen) {
-                _serialPort = new SerialPort();
-                _serialPort.PortName = portname;
-                _serialPort.BaudRate = 115200;
-                _serialPort.Parity = Parity.None;
-                _serialPort.StopBits = StopBits.One;
-                _serialPort.DataBits = 8;
-                _serialPort.Handshake = Handshake.None;
-                _serialPort.RtsEnable = true;
-                _serialPort.DtrEnable = true;
-                try {
-                    _serialPort.Open();
-                    serialMonitorAdd($"Connecting to: {portname} at 115200");
-                } catch {
-                    // Console.WriteLine("Error opening serialPort.");
-                    serialMonitorAdd("Error opening serialPort.");
-                }
-            } else {
-                // Console.WriteLine("SerialPort is already open.");
-                serialMonitorAdd("SerialPort is already open.");
-            }
-        }
 
-        void DisConnectSerialPort() {
-            serialMonitorAdd($"Disconnected from: {_serialPort.PortName}");
-            if (_serialPort.IsOpen) _serialPort.Close();
-        }
-
-        void serialMonitorAdd(string s) {
-            SerialMonitor.Enqueue(s);
-            if (SerialMonitor.Count > 10) {
-                SerialMonitor.Dequeue();
-            }
-            NCurses.ClearWindow(SerialMonitorWindow);
-            for (int i = 0; i < Math.Min(10, SerialMonitor.Count); i++) {
-                NCurses.MoveWindowAddString(SerialMonitorWindow, i, 0, SerialMonitor.ToArray()[Math.Max(10, SerialMonitor.Count) - 10 + i]);
-            }
-            NCurses.WindowRefresh(SerialMonitorWindow);
-            //redraw serial window
-        }
-
-        void checkSerial() {
-            if (_serialPort.IsOpen) {
-                int b = _serialPort.BytesToRead;
-                if (b > 0) {
-                    String s = _serialPort.ReadLine();
-                    if (s.Length > 0) {
-                        if (s[0] == '@') {
-                            //we have a data request
-
-                            Int64 index = Int64.Parse(s.Split('@', 3)[1]);
-                            if (running) {
-                                SendInstruction(index);
-                            }
-                        }
-                        serialMonitorAdd(s);
-                    }
-                }
-            }
-        }
-
-        void LoadFileData() {
-            if (File.Exists(fileWindow.getFullSelected())) {
-                _driFileInfo.filename = fileWindow.getFullSelected();
-                using (FileStream fileStream = new FileStream(fileWindow.getFullSelected(), FileMode.Open)) {
-                    byte[] tempbuffer = new byte[42];
-                    // Write the data to the file, byte by byte.
-                    fileStream.Seek(0, SeekOrigin.Begin);
-                    fileStream.Read(tempbuffer);
-
-                    _driFileInfo.fileheader = System.Text.Encoding.UTF8.GetString(tempbuffer, 0, 20);
-                    _driFileInfo.version = BitConverter.ToInt32(tempbuffer, 20);
-                    _driFileInfo.count = BitConverter.ToInt32(tempbuffer, 24);
-                    _driFileInfo.start = BitConverter.ToInt64(tempbuffer, 32);
-                    _driFileInfo.size = tempbuffer[40];
-                }
-            }
-            _driFileInfo.index = 0;
-            _driFileInfo.sendIndex = 0;
-        }
-
-        void SendInstruction(Int64 index) {
-            //open one drawinstruction, check it, send to serial
-            //Keep Track and Display Progress
-
-            if (File.Exists(fileWindow.getFullSelected())) {
-                if (index < _driFileInfo.count) {
-                    _driFileInfo.filename = fileWindow.getFullSelected();
-                    byte[] tempbuffer = new byte[_driFileInfo.size];
-                    using (FileStream fileStream = new FileStream(fileWindow.getFullSelected(), FileMode.Open)) {
-                        fileStream.Seek(_driFileInfo.start + _driFileInfo.size * index, SeekOrigin.Begin);
-                        fileStream.Read(tempbuffer);
-                    }
-                    // verify drawinstruction
-                    bool msgOK = true;
-                    int numbytes = 0;
-                    int checksum = 0;
-                    for (int i = 0; i < tempbuffer.Length; i++) {
-                        if (msgOK) {
-                            if (i < 10) {
-                                if (tempbuffer[i] != 0xFF) {
-                                    msgOK = false;
-                                }
-                            }
-                            if (i == 10) {
-                                numbytes = tempbuffer[10];
-                            }
-                            if (i > 10 && i < 11 + numbytes) {
-                                checksum += tempbuffer[i];
-                            }
-                            if (i == 11 + numbytes) {
-                                if (checksum != BitConverter.ToInt32(tempbuffer, i)) msgOK = false;
-                            }
-
-                        }
-                    }
-
-                    if (msgOK) {
-                        // Console.WriteLine($"file checksum {checksum} is ok! sending instruction");
-                        if (_serialPort.IsOpen) {
-                            _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
-                            _serialLastSendBytes = BitConverter.ToString(tempbuffer);
-                            // _driFileInfo.index=index;
-                            _driFileInfo.sendIndex = index + 1;
-                            DrawMainWindowFileInfo();
-                            NCurses.WindowRefresh(MainWindow);
-                        } else {
-                            _serialLastSendBytes = "SerialPort is disconnected.";
-                        }
-                    } else {
-                        Console.WriteLine($"file checksum {checksum}is bad! possible file corruption, aborting..");
-                    }
-
-                }
-            }
-
-
-        }        
     }
 }
 
