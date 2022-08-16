@@ -22,6 +22,8 @@ namespace Loader {
         private byte[] _serialMessageData = new byte[0];
         private String _serialLastSendBytes = "";
 
+        private String[] status = {};
+
         private static IntPtr Screen;
         private static IntPtr MainWindow;
         private static IntPtr SerialMonitorWindow;
@@ -33,6 +35,7 @@ namespace Loader {
         private static IntPtr SerialCloseButton;
         private static IntPtr RunButton;
         private static IntPtr StopButton;
+        private static IntPtr StatusWindow;
 
         uint Color_FileWindowNormal;
         uint Color_FileWindowHot;
@@ -151,6 +154,27 @@ namespace Loader {
                 if (b > 0) {
                     String s = _serialPort.ReadLine();
                     if (s.Length > 0) {
+                        switch(s[0]) {
+                            case '@':
+                                //we have a data request
+                                Int64 index = Int64.Parse(s.Split('@', 3)[1]);
+                                if (running) {
+                                    SendInstruction(index);
+                                }
+                                break;             
+                            case '$':
+                                //we have a status update
+                                status = s.Split('$');
+                                
+                                NCurses.TouchWindow(StatusWindow);
+                                DrawStatusWindow();
+                                NCurses.WindowRefresh(StatusWindow);
+                                break;
+                            default:
+                                serialMonitorAdd(s);
+                                break;  
+        
+                        }
                         if (s[0] == '@') {
                             //we have a data request
 
@@ -159,7 +183,7 @@ namespace Loader {
                                 SendInstruction(index);
                             }
                         }
-                        serialMonitorAdd(s);
+
                     }
                 }
             }
@@ -307,12 +331,18 @@ namespace Loader {
             serialWindow.Draw();
 
 
-
             MainWindow = NCurses.NewWindow(screen_height, screen_width, 0, 0);
             NCurses.WindowBackground(MainWindow, Color_MainWindowNormal);
             DrawMainWindow();
             DrawMainWindowFileInfo();
             NCurses.WindowRefresh(MainWindow);
+
+            // StatusWindow = NCurses.NewWindow(screen_height, 20, 0, screen_width-20);
+            StatusWindow = NCurses.NewWindow(screen_height, 20, 0, 65);
+            NCurses.WindowBackground(StatusWindow, Color_MainWindowNormal);
+            DrawStatusWindow();
+            // DrawMainWindowFileInfo();
+            NCurses.WindowRefresh(StatusWindow);
 
             SerialWindowButton = NCurses.NewWindow(1, serialWindow.width - 1, 3, 5);
             DrawButton(SerialWindowButton, Color_ButtonNormal, serialWindow.getSelected());
@@ -375,6 +405,11 @@ namespace Loader {
             NCurses.WindowRefresh(StopButton);
             NCurses.TouchWindow(SerialOpenButton);
             NCurses.WindowRefresh(SerialOpenButton);
+
+            // NCurses.MoveWindow(StatusWindow,0,screen_width-20);
+            NCurses.TouchWindow(StatusWindow);
+            NCurses.WindowRefresh(StatusWindow);
+
 
             if (fileWindow.selected) {
                 fileWindow.TouchRefresh();
@@ -608,6 +643,9 @@ namespace Loader {
 
             NCurses.TouchWindow(SerialMonitorWindow);
             NCurses.WindowRefresh(SerialMonitorWindow);
+
+            NCurses.TouchWindow(StatusWindow);
+            NCurses.WindowRefresh(StatusWindow);
         }
 
         void DrawButton(IntPtr win, uint color, string text) {
@@ -616,6 +654,49 @@ namespace Loader {
             NCurses.WindowRefresh(win);
         }
 
+        void DrawStatusWindow() {
+            int top = 0;
+            int left = 0;
+
+            int l = status.Length;
+
+            NCurses.WindowAttributeSet(StatusWindow, Color_MainWindowDim);
+            NCurses.MoveWindowAddString(StatusWindow, top +  1, left, "tions");
+            NCurses.MoveWindowAddString(StatusWindow, top + 9, left, "ches");
+            // NCurses.MoveWindowAddString(StatusWindow, top + 16, left, "load");
+            // NCurses.MoveWindowAddString(StatusWindow, top + 23, left, "power");
+
+
+            NCurses.WindowAttributeSet(StatusWindow, Color_MainWindowNormal);
+            if (l > 1 ) NCurses.MoveWindowAddString(StatusWindow, top + 3, left, status[2]);                               
+            if (l > 2 ) NCurses.MoveWindowAddString(StatusWindow, top + 4, left, status[3]);                               
+            if (l > 3 ) NCurses.MoveWindowAddString(StatusWindow, top + 5, left, status[4]);                               
+            if (l > 4 ) NCurses.MoveWindowAddString(StatusWindow, top + 6, left, status[5]);                               
+            if (l > 5 ) NCurses.MoveWindowAddString(StatusWindow, top + 7, left, status[6]);                               
+
+            if (l > 6 ) NCurses.MoveWindowAddString(StatusWindow, top + 18, left, status[7]);                               
+            if (l > 7 ) NCurses.MoveWindowAddString(StatusWindow, top + 19, left, status[8]);                               
+            if (l > 8 ) NCurses.MoveWindowAddString(StatusWindow, top + 20, left, status[9]);                               
+            if (l > 9 ) NCurses.MoveWindowAddString(StatusWindow, top + 21, left, status[10]);                               
+            if (l > 10) NCurses.MoveWindowAddString(StatusWindow, top + 22, left, status[11]);                               
+
+            if (l > 11) NCurses.MoveWindowAddString(StatusWindow, top + 24, left, status[12] + " mA     ");                               
+
+            if (l > 12) NCurses.MoveWindowAddString(StatusWindow, top + 11, left  , status[13]);                               
+            if (l > 13) NCurses.MoveWindowAddString(StatusWindow, top + 11, left+2, status[14]);                               
+            if (l > 14) NCurses.MoveWindowAddString(StatusWindow, top + 12, left  , status[15]);                               
+            if (l > 15) NCurses.MoveWindowAddString(StatusWindow, top + 12, left+2, status[16]);                               
+            if (l > 16) NCurses.MoveWindowAddString(StatusWindow, top + 13, left  , status[17]);                               
+            if (l > 17) NCurses.MoveWindowAddString(StatusWindow, top + 13, left+2, status[18]);                               
+            if (l > 18) NCurses.MoveWindowAddString(StatusWindow, top + 14, left  , status[19]);                               
+            if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 14, left+2, status[20]);                               
+
+
+            // for (int t=2; t < status.Length; t++) {
+            //     NCurses.MoveWindowAddString(StatusWindow, top + t - 2, left, status[t]);                               
+            // }
+
+        }
         void DrawMainWindow() {
             int top = 1;
             int left = 0;
@@ -652,6 +733,36 @@ namespace Loader {
             NCurses.MoveWindowAddString(MainWindow, top + 8, left + 5, "header:");
             NCurses.MoveWindowAddString(MainWindow, top + 9, left + 5, "drawcount:");
             NCurses.MoveWindowAddString(MainWindow, top + 11, left + 5, "instructions sent:");
+
+            NCurses.WindowAttributeSet(MainWindow, Color_MainWindowDim);
+            // NCurses.MoveWindowAddString(MainWindow, top + 3, left + 61, "    positions");
+            NCurses.MoveWindowAddString(MainWindow, top + 2, left + 61, "M1:");
+            NCurses.MoveWindowAddString(MainWindow, top + 3, left + 61, "M2:");
+            NCurses.MoveWindowAddString(MainWindow, top + 4, left + 61, "M3:");
+            NCurses.MoveWindowAddString(MainWindow, top + 5, left + 61, "M4:");
+            NCurses.MoveWindowAddString(MainWindow, top + 6, left + 61, "M5:");
+
+            // NCurses.MoveWindowAddString(MainWindow, top + 10, left + 61, "    switches");
+            NCurses.MoveWindowAddString(MainWindow, top + 10, left + 61, "X1:");
+            NCurses.MoveWindowAddString(MainWindow, top + 11, left + 61, "X2:");
+            NCurses.MoveWindowAddString(MainWindow, top + 12, left + 61, "Y :");
+            NCurses.MoveWindowAddString(MainWindow, top + 13, left + 61, "Z :");
+
+            // NCurses.MoveWindowAddString(MainWindow, top + 16, left + 61, "    load");
+            NCurses.MoveWindowAddString(MainWindow, top + 17, left + 61, "M1:");
+            NCurses.MoveWindowAddString(MainWindow, top + 18, left + 61, "M2:");
+            NCurses.MoveWindowAddString(MainWindow, top + 19, left + 61, "M3:");
+            NCurses.MoveWindowAddString(MainWindow, top + 20, left + 61, "M4:");
+            NCurses.MoveWindowAddString(MainWindow, top + 21, left + 61, "M5:");
+
+            // NCurses.MoveWindowAddString(MainWindow, top + 23, left + 61, "    power");
+            NCurses.MoveWindowAddString(MainWindow, top + 23, left + 61, "24v:");
+
+            // NCurses.WindowAttributeSet(MainWindow, Color_MainWindowDim);
+            NCurses.MoveWindowAddString(MainWindow, top +  0, left + 61, "positions");
+            NCurses.MoveWindowAddString(MainWindow, top +  8, left + 61, "switches");
+            NCurses.MoveWindowAddString(MainWindow, top + 15, left + 61, "load");
+
         }
 
         void DrawMainWindowFileInfo() {
