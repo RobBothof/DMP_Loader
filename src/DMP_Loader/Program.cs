@@ -175,15 +175,6 @@ namespace Loader {
                                 break;  
         
                         }
-                        if (s[0] == '@') {
-                            //we have a data request
-
-                            Int64 index = Int64.Parse(s.Split('@', 3)[1]);
-                            if (running) {
-                                SendInstruction(index);
-                            }
-                        }
-
                     }
                 }
             }
@@ -668,28 +659,30 @@ namespace Loader {
 
 
             NCurses.WindowAttributeSet(StatusWindow, Color_MainWindowNormal);
-            if (l > 1 ) NCurses.MoveWindowAddString(StatusWindow, top + 3, left, status[2]);                               
-            if (l > 2 ) NCurses.MoveWindowAddString(StatusWindow, top + 4, left, status[3]);                               
-            if (l > 3 ) NCurses.MoveWindowAddString(StatusWindow, top + 5, left, status[4]);                               
-            if (l > 4 ) NCurses.MoveWindowAddString(StatusWindow, top + 6, left, status[5]);                               
-            if (l > 5 ) NCurses.MoveWindowAddString(StatusWindow, top + 7, left, status[6]);                               
+            if (l > 1 ) NCurses.MoveWindowAddString(StatusWindow, top + 3, left, status[2].PadRight(20, ' '));                               
+            if (l > 2 ) NCurses.MoveWindowAddString(StatusWindow, top + 4, left, status[3].PadRight(20, ' '));                               
+            if (l > 3 ) NCurses.MoveWindowAddString(StatusWindow, top + 5, left, status[4].PadRight(20, ' '));                               
+            if (l > 5 ) NCurses.MoveWindowAddString(StatusWindow, top + 6, left, status[5].PadRight(20, ' '));                               
+            if (l > 6 ) NCurses.MoveWindowAddString(StatusWindow, top + 7, left, status[6].PadRight(20, ' '));                               
 
-            if (l > 6 ) NCurses.MoveWindowAddString(StatusWindow, top + 18, left, status[7]);                               
-            if (l > 7 ) NCurses.MoveWindowAddString(StatusWindow, top + 19, left, status[8]);                               
-            if (l > 8 ) NCurses.MoveWindowAddString(StatusWindow, top + 20, left, status[9]);                               
-            if (l > 9 ) NCurses.MoveWindowAddString(StatusWindow, top + 21, left, status[10]);                               
-            if (l > 10) NCurses.MoveWindowAddString(StatusWindow, top + 22, left, status[11]);                               
+            if (l > 7 ) NCurses.MoveWindowAddString(StatusWindow, top + 18, left, status[7].PadLeft(4,' '));                               
+            if (l > 8 ) NCurses.MoveWindowAddString(StatusWindow, top + 19, left, status[8].PadLeft(4,' '));                               
+            if (l > 9 ) NCurses.MoveWindowAddString(StatusWindow, top + 20, left, status[9].PadLeft(4,' '));                               
+            if (l > 10) NCurses.MoveWindowAddString(StatusWindow, top + 21, left, status[10].PadLeft(4,' '));                               
+            if (l > 11) NCurses.MoveWindowAddString(StatusWindow, top + 22, left, status[11].PadLeft(4,' '));                               
 
-            if (l > 11) NCurses.MoveWindowAddString(StatusWindow, top + 24, left, status[12] + " mA     ");                               
+            if (l > 12) NCurses.MoveWindowAddString(StatusWindow, top + 24, left, status[12] + " mA     ");                               
 
-            if (l > 12) NCurses.MoveWindowAddString(StatusWindow, top + 11, left  , status[13]);                               
-            if (l > 13) NCurses.MoveWindowAddString(StatusWindow, top + 11, left+2, status[14]);                               
-            if (l > 14) NCurses.MoveWindowAddString(StatusWindow, top + 12, left  , status[15]);                               
-            if (l > 15) NCurses.MoveWindowAddString(StatusWindow, top + 12, left+2, status[16]);                               
-            if (l > 16) NCurses.MoveWindowAddString(StatusWindow, top + 13, left  , status[17]);                               
-            if (l > 17) NCurses.MoveWindowAddString(StatusWindow, top + 13, left+2, status[18]);                               
-            if (l > 18) NCurses.MoveWindowAddString(StatusWindow, top + 14, left  , status[19]);                               
-            if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 14, left+2, status[20]);                               
+            if (l > 13) NCurses.MoveWindowAddString(StatusWindow, top + 11, left  , status[13]);                               
+            if (l > 14) NCurses.MoveWindowAddString(StatusWindow, top + 11, left+2, status[14]);                               
+            if (l > 15) NCurses.MoveWindowAddString(StatusWindow, top + 12, left  , status[15]);                               
+            if (l > 16) NCurses.MoveWindowAddString(StatusWindow, top + 12, left+2, status[16]);                               
+            if (l > 17) NCurses.MoveWindowAddString(StatusWindow, top + 13, left  , status[17]);                               
+            if (l > 18) NCurses.MoveWindowAddString(StatusWindow, top + 13, left+2, status[18]);                               
+            if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 14, left  , status[19]);                               
+            if (l > 20) NCurses.MoveWindowAddString(StatusWindow, top + 14, left+2, status[20]);                               
+            if (l > 21) NCurses.MoveWindowAddString(StatusWindow, top + 26, left, status[21].PadRight(20, ' '));                              
+            if (l > 22) NCurses.MoveWindowAddString(StatusWindow, top + 27, left, status[22].PadRight(20, ' '));                              
 
 
             // for (int t=2; t < status.Length; t++) {
