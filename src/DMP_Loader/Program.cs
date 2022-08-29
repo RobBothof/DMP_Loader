@@ -55,8 +55,8 @@ namespace Loader {
 
         bool running = false;
 
-        ScrollWindow fileWindow = new ScrollWindow(15, 37, 1, 5);
-        ScrollWindow serialWindow = new ScrollWindow(15, 37, 3, 5);
+        ScrollWindow fileWindow = new ScrollWindow(15, 28, 1, 5);
+        ScrollWindow serialWindow = new ScrollWindow(15, 28, 3, 5);
 
         static int Main(string[] args) {
             return new Program().Run();
@@ -137,15 +137,36 @@ namespace Loader {
 
         void serialMonitorAdd(string s) {
             SerialMonitor.Enqueue(s);
-            if (SerialMonitor.Count > 10) {
+            while (SerialMonitor.Count > screen_height-4) {
                 SerialMonitor.Dequeue();
             }
             NCurses.ClearWindow(SerialMonitorWindow);
-            for (int i = 0; i < Math.Min(10, SerialMonitor.Count); i++) {
-                NCurses.MoveWindowAddString(SerialMonitorWindow, i, 0, SerialMonitor.ToArray()[Math.Max(10, SerialMonitor.Count) - 10 + i]);
+            NCurses.WindowAttributeSet(SerialMonitorWindow, Color_MainWindowDim | CursesAttribute.ALTCHARSET);
+            NCurses.Box(SerialMonitorWindow,'x','q');
+            NCurses.WindowAttributeSet(SerialMonitorWindow, Color_MainWindowColor);
+            NCurses.MoveWindowAddString(SerialMonitorWindow, 0, 2, "[ SerialMonitor ]");          
+            NCurses.WindowAttributeSet(SerialMonitorWindow, Color_MainWindowNormal);
+            for (int i = 0; i < Math.Min(screen_height-4, SerialMonitor.Count); i++) {
+                NCurses.MoveWindowAddString(SerialMonitorWindow, i+1, 2, SerialMonitor.ToArray()[Math.Max(screen_height-4, SerialMonitor.Count) - (screen_height-4) + i]);
             }
             NCurses.WindowRefresh(SerialMonitorWindow);
             //redraw serial window
+        }
+
+        void SerialMonitorRedraw() {
+            while (SerialMonitor.Count > screen_height-4) {
+                SerialMonitor.Dequeue();
+            }
+            NCurses.ClearWindow(SerialMonitorWindow);
+            NCurses.WindowAttributeSet(SerialMonitorWindow, Color_MainWindowDim | CursesAttribute.ALTCHARSET);
+            NCurses.Box(SerialMonitorWindow,'x','q');
+            NCurses.WindowAttributeSet(SerialMonitorWindow, Color_MainWindowColor);
+            NCurses.MoveWindowAddString(SerialMonitorWindow, 0, 2, "[ SerialMonitor ]");          
+            NCurses.WindowAttributeSet(SerialMonitorWindow, Color_MainWindowNormal);
+            for (int i = 0; i < Math.Min(screen_height-4, SerialMonitor.Count); i++) {
+                NCurses.MoveWindowAddString(SerialMonitorWindow, i+1, 2, SerialMonitor.ToArray()[Math.Max(screen_height-4, SerialMonitor.Count) - (screen_height-4) + i]);
+            }
+            NCurses.WindowRefresh(SerialMonitorWindow);
         }
 
         void checkSerial() {
@@ -329,7 +350,7 @@ namespace Loader {
             NCurses.WindowRefresh(MainWindow);
 
             // StatusWindow = NCurses.NewWindow(screen_height, 20, 0, screen_width-20);
-            StatusWindow = NCurses.NewWindow(screen_height, 20, 0, 65);
+            StatusWindow = NCurses.NewWindow(screen_height-15,50, 15, 0);
             NCurses.WindowBackground(StatusWindow, Color_MainWindowNormal);
             DrawStatusWindow();
             // DrawMainWindowFileInfo();
@@ -369,9 +390,8 @@ namespace Loader {
             StopButton = NCurses.NewWindow(1, 6, 5, fileWindow.width + 12);
             DrawButton(StopButton, Color_ButtonNormal, "Stop");
 
-            SerialMonitorWindow = NCurses.NewWindow(10, 50, 15, 4);
-            NCurses.WindowBackground(SerialMonitorWindow, Color_MainWindowNormal);
-            NCurses.WindowRefresh(SerialMonitorWindow);
+            SerialMonitorWindow = NCurses.NewWindow(screen_height-2, screen_width-53, 1, 52);
+            SerialMonitorRedraw();
         }
 
         void Resize() {
@@ -401,6 +421,7 @@ namespace Loader {
             NCurses.TouchWindow(StatusWindow);
             NCurses.WindowRefresh(StatusWindow);
 
+            SerialMonitorRedraw();
 
             if (fileWindow.selected) {
                 fileWindow.TouchRefresh();
@@ -652,37 +673,64 @@ namespace Loader {
             int l = status.Length;
 
             NCurses.WindowAttributeSet(StatusWindow, Color_MainWindowDim);
-            NCurses.MoveWindowAddString(StatusWindow, top +  1, left, "tions");
-            NCurses.MoveWindowAddString(StatusWindow, top + 9, left, "ches");
-            // NCurses.MoveWindowAddString(StatusWindow, top + 16, left, "load");
-            // NCurses.MoveWindowAddString(StatusWindow, top + 23, left, "power");
+            NCurses.MoveWindowAddString(StatusWindow, top, left+5, "position");
+            NCurses.MoveWindowAddString(StatusWindow, top, left+17, "swich");
+            NCurses.MoveWindowAddString(StatusWindow, top, left+31, "load");
 
+            NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 1, "M1:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 1, "M2:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 1, "M3:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 1, "M4:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 1, "M5:");
+
+            NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 15, "X1:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 15, "X2:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 15, " Y:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 15, " Z:");
+
+            NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 26, "M1:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 26, "M2:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 26, "M3:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 26, "M4:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 26, "M5:");
+
+            NCurses.MoveWindowAddString(StatusWindow, top, left+42, "other");
+            NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 38, "24v:");
+
+            NCurses.MoveWindowAddString(StatusWindow, top+4, left+37, "line:");
 
             NCurses.WindowAttributeSet(StatusWindow, Color_MainWindowNormal);
-            if (l > 1 ) NCurses.MoveWindowAddString(StatusWindow, top + 3, left, status[2].PadRight(20, ' '));                               
-            if (l > 2 ) NCurses.MoveWindowAddString(StatusWindow, top + 4, left, status[3].PadRight(20, ' '));                               
-            if (l > 3 ) NCurses.MoveWindowAddString(StatusWindow, top + 5, left, status[4].PadRight(20, ' '));                               
-            if (l > 5 ) NCurses.MoveWindowAddString(StatusWindow, top + 6, left, status[5].PadRight(20, ' '));                               
-            if (l > 6 ) NCurses.MoveWindowAddString(StatusWindow, top + 7, left, status[6].PadRight(20, ' '));                               
+            if (l > 1 ) NCurses.MoveWindowAddString(StatusWindow, top + 2, left+4, status[2].PadLeft(9, ' '));                               
+            if (l > 2 ) NCurses.MoveWindowAddString(StatusWindow, top + 3, left+4, status[3].PadLeft(9, ' '));                               
+            if (l > 3 ) NCurses.MoveWindowAddString(StatusWindow, top + 4, left+4, status[4].PadLeft(9, ' '));                               
+            if (l > 5 ) NCurses.MoveWindowAddString(StatusWindow, top + 5, left+4, status[5].PadLeft(9, ' '));                               
+            if (l > 6 ) NCurses.MoveWindowAddString(StatusWindow, top + 6, left+4, status[6].PadLeft(9, ' '));                               
 
-            if (l > 7 ) NCurses.MoveWindowAddString(StatusWindow, top + 18, left, status[7].PadLeft(4,' '));                               
-            if (l > 8 ) NCurses.MoveWindowAddString(StatusWindow, top + 19, left, status[8].PadLeft(4,' '));                               
-            if (l > 9 ) NCurses.MoveWindowAddString(StatusWindow, top + 20, left, status[9].PadLeft(4,' '));                               
-            if (l > 10) NCurses.MoveWindowAddString(StatusWindow, top + 21, left, status[10].PadLeft(4,' '));                               
-            if (l > 11) NCurses.MoveWindowAddString(StatusWindow, top + 22, left, status[11].PadLeft(4,' '));                               
+            if (l > 7 ) NCurses.MoveWindowAddString(StatusWindow, top + 2, left+30, status[7].PadLeft(5,' '));                               
+            if (l > 8 ) NCurses.MoveWindowAddString(StatusWindow, top + 3, left+30, status[8].PadLeft(5,' '));                               
+            if (l > 9 ) NCurses.MoveWindowAddString(StatusWindow, top + 4, left+30, status[9].PadLeft(5,' '));                               
+            if (l > 10) NCurses.MoveWindowAddString(StatusWindow, top + 5, left+30, status[10].PadLeft(5,' '));                               
+            if (l > 11) NCurses.MoveWindowAddString(StatusWindow, top + 6, left+30, status[11].PadLeft(5,' '));                               
 
-            if (l > 12) NCurses.MoveWindowAddString(StatusWindow, top + 24, left, status[12] + " mA     ");                               
+            if (l > 12) NCurses.MoveWindowAddString(StatusWindow, top + 2, left+42, (status[12] + " mA").PadLeft(8));                               
 
-            if (l > 13) NCurses.MoveWindowAddString(StatusWindow, top + 11, left  , status[13]);                               
-            if (l > 14) NCurses.MoveWindowAddString(StatusWindow, top + 11, left+2, status[14]);                               
-            if (l > 15) NCurses.MoveWindowAddString(StatusWindow, top + 12, left  , status[15]);                               
-            if (l > 16) NCurses.MoveWindowAddString(StatusWindow, top + 12, left+2, status[16]);                               
-            if (l > 17) NCurses.MoveWindowAddString(StatusWindow, top + 13, left  , status[17]);                               
-            if (l > 18) NCurses.MoveWindowAddString(StatusWindow, top + 13, left+2, status[18]);                               
-            if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 14, left  , status[19]);                               
-            if (l > 20) NCurses.MoveWindowAddString(StatusWindow, top + 14, left+2, status[20]);                               
-            if (l > 21) NCurses.MoveWindowAddString(StatusWindow, top + 26, left, status[21].PadRight(20, ' '));                              
-            if (l > 22) NCurses.MoveWindowAddString(StatusWindow, top + 27, left, status[22].PadRight(20, ' '));                              
+            if (l > 13) NCurses.MoveWindowAddString(StatusWindow, top + 2, left+19  , status[13]);                               
+            if (l > 14) NCurses.MoveWindowAddString(StatusWindow, top + 2, left+19+2, status[14]);                               
+            if (l > 15) NCurses.MoveWindowAddString(StatusWindow, top + 3, left+19  , status[15]);                               
+            if (l > 16) NCurses.MoveWindowAddString(StatusWindow, top + 3, left+19+2, status[16]);                               
+            if (l > 17) NCurses.MoveWindowAddString(StatusWindow, top + 4, left+19  , status[17]);                               
+            if (l > 18) NCurses.MoveWindowAddString(StatusWindow, top + 4, left+19+2, status[18]);                               
+            if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 5, left+19  , status[19]);                               
+            if (l > 20) NCurses.MoveWindowAddString(StatusWindow, top + 5, left+19+2, status[20]);        
+
+            if (l > 21) {
+                int functioncode = int.Parse(status[21]);
+                if (functioncode==0) NCurses.MoveWindowAddString(StatusWindow, top + 6, left+37, "Waiting".PadLeft(13, ' '));                              
+                if (functioncode==1) NCurses.MoveWindowAddString(StatusWindow, top + 6, left+37, "Homing".PadLeft(13, ' '));                              
+                if (functioncode==2) NCurses.MoveWindowAddString(StatusWindow, top + 6, left+37, "Moving".PadLeft(13, ' '));                              
+                if (functioncode==3) NCurses.MoveWindowAddString(StatusWindow, top + 6, left+37, "Drawing".PadLeft(13, ' '));                              
+            }
+            if (l > 22) NCurses.MoveWindowAddString(StatusWindow, top + 4, left+42, status[22].PadLeft(8, ' '));                              
 
 
             // for (int t=2; t < status.Length; t++) {
@@ -695,31 +743,32 @@ namespace Loader {
             int left = 0;
 
             NCurses.WindowAttributeSet(MainWindow, Color_MainWindowDim | CursesAttribute.ALTCHARSET);
-            NCurses.MoveWindowAddString(MainWindow, top + 0, left, " lq>                                      qqqqq>        >qk");
-            NCurses.MoveWindowAddString(MainWindow, top + 1, left, " x                                                        x");
-            NCurses.MoveWindowAddString(MainWindow, top + 2, left, " tq>                                      qqq>           >u");
-            NCurses.MoveWindowAddString(MainWindow, top + 3, left, " x                                                        x");
-            NCurses.MoveWindowAddString(MainWindow, top + 4, left, " mqq                                                    >qu");
-            NCurses.MoveWindowAddString(MainWindow, top + 5, left, "                                                          x");
-            NCurses.MoveWindowAddString(MainWindow, top + 6, left, "                                                          x");
-            NCurses.MoveWindowAddString(MainWindow, top + 7, left, "                                                       <qqu");
-            NCurses.MoveWindowAddString(MainWindow, top + 8, left, "                                                       <qqu");
-            NCurses.MoveWindowAddString(MainWindow, top + 9, left, "                                                       <qqu");
-            NCurses.MoveWindowAddString(MainWindow, top + 10, left, "                                                          x");
-            NCurses.MoveWindowAddString(MainWindow, top + 11, left, "                                                       <qqu");
-            NCurses.MoveWindowAddString(MainWindow, top + 12, left, "                                                          x");
-            NCurses.MoveWindowAddString(MainWindow, top + 13, left, "  lqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqk x");
-            NCurses.MoveWindowAddString(MainWindow, top + 14, left, " lu                                                     tkx");
-            NCurses.MoveWindowAddString(MainWindow, top + 15, left, " xx                                                     xxu");
-            NCurses.MoveWindowAddString(MainWindow, top + 16, left, " xx                                                     xxu");
-            NCurses.MoveWindowAddString(MainWindow, top + 17, left, " xx                                                     xxu");
-            NCurses.MoveWindowAddString(MainWindow, top + 18, left, " xx                                                     xxu");
-            NCurses.MoveWindowAddString(MainWindow, top + 19, left, " xx                                                     xxj");
-            NCurses.MoveWindowAddString(MainWindow, top + 20, left, " xx                                                     xx ");
-            NCurses.MoveWindowAddString(MainWindow, top + 21, left, " xx                                                     xx ");
-            NCurses.MoveWindowAddString(MainWindow, top + 22, left, " mu                                                     tj ");
-            NCurses.MoveWindowAddString(MainWindow, top + 23, left, "  x                                                     x  ");
-            NCurses.MoveWindowAddString(MainWindow, top + 24, left, "  mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj  ");
+            NCurses.MoveWindowAddString(MainWindow, top + 0, left, " lq>                             qqqqq>        >qk");
+            NCurses.MoveWindowAddString(MainWindow, top + 1, left, " x                                               x");
+            NCurses.MoveWindowAddString(MainWindow, top + 2, left, " tq>                             qqq>           >u");
+            NCurses.MoveWindowAddString(MainWindow, top + 3, left, " x                                               x");
+            NCurses.MoveWindowAddString(MainWindow, top + 4, left, " mqq                                           >qu");
+            NCurses.MoveWindowAddString(MainWindow, top + 5, left, "                                                 x");
+            NCurses.MoveWindowAddString(MainWindow, top + 6, left, "                                                 x");
+            NCurses.MoveWindowAddString(MainWindow, top + 7, left, "                                              <qqu");
+            NCurses.MoveWindowAddString(MainWindow, top + 8, left, "                                              <qqu");
+            NCurses.MoveWindowAddString(MainWindow, top + 9, left, "                                              <qqu");
+            NCurses.MoveWindowAddString(MainWindow, top + 10, left, "                                                 x");
+            NCurses.MoveWindowAddString(MainWindow, top + 11, left, "                                              <qqj");
+            // NCurses.MoveWindowAddString(MainWindow, top + 12, left, "                                                 x");
+            // NCurses.MoveWindowAddString(MainWindow, top + 13, left, "                                                 x");
+            // NCurses.MoveWindowAddString(MainWindow, top + 14, left, "                                                       <qj");
+            // NCurses.MoveWindowAddString(MainWindow, top + 14, left, "                                                        <qj");
+            // NCurses.MoveWindowAddString(MainWindow, top + 15, left, " xx                                                     xxu");
+            // NCurses.MoveWindowAddString(MainWindow, top + 16, left, " xx                                                     xxu");
+            // NCurses.MoveWindowAddString(MainWindow, top + 17, left, " xx                                                     xxj");
+            // NCurses.MoveWindowAddString(MainWindow, top + 18, left, " m>                                                     tj ");
+            // NCurses.MoveWindowAddString(MainWindow, top + 19, left, " xx                                                     xxj");
+            // NCurses.MoveWindowAddString(MainWindow, top + 20, left, " xx                                                     xx ");
+            // NCurses.MoveWindowAddString(MainWindow, top + 21, left, " xx                                                     xx ");
+            // NCurses.MoveWindowAddString(MainWindow, top + 22, left, " mu                                                     tj ");
+            // NCurses.MoveWindowAddString(MainWindow, top + 23, left, "  x                                                     x  ");
+            // NCurses.MoveWindowAddString(MainWindow, top + 24, left, "  mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj  ");
 
             NCurses.WindowAttributeSet(MainWindow, Color_MainWindowNormal);
             NCurses.MoveWindowAddString(MainWindow, top + 7, left + 5, "filename:");
@@ -727,34 +776,35 @@ namespace Loader {
             NCurses.MoveWindowAddString(MainWindow, top + 9, left + 5, "drawcount:");
             NCurses.MoveWindowAddString(MainWindow, top + 11, left + 5, "instructions sent:");
 
-            NCurses.WindowAttributeSet(MainWindow, Color_MainWindowDim);
-            // NCurses.MoveWindowAddString(MainWindow, top + 3, left + 61, "    positions");
-            NCurses.MoveWindowAddString(MainWindow, top + 2, left + 61, "M1:");
-            NCurses.MoveWindowAddString(MainWindow, top + 3, left + 61, "M2:");
-            NCurses.MoveWindowAddString(MainWindow, top + 4, left + 61, "M3:");
-            NCurses.MoveWindowAddString(MainWindow, top + 5, left + 61, "M4:");
-            NCurses.MoveWindowAddString(MainWindow, top + 6, left + 61, "M5:");
-
-            // NCurses.MoveWindowAddString(MainWindow, top + 10, left + 61, "    switches");
-            NCurses.MoveWindowAddString(MainWindow, top + 10, left + 61, "X1:");
-            NCurses.MoveWindowAddString(MainWindow, top + 11, left + 61, "X2:");
-            NCurses.MoveWindowAddString(MainWindow, top + 12, left + 61, "Y :");
-            NCurses.MoveWindowAddString(MainWindow, top + 13, left + 61, "Z :");
-
-            // NCurses.MoveWindowAddString(MainWindow, top + 16, left + 61, "    load");
-            NCurses.MoveWindowAddString(MainWindow, top + 17, left + 61, "M1:");
-            NCurses.MoveWindowAddString(MainWindow, top + 18, left + 61, "M2:");
-            NCurses.MoveWindowAddString(MainWindow, top + 19, left + 61, "M3:");
-            NCurses.MoveWindowAddString(MainWindow, top + 20, left + 61, "M4:");
-            NCurses.MoveWindowAddString(MainWindow, top + 21, left + 61, "M5:");
-
-            // NCurses.MoveWindowAddString(MainWindow, top + 23, left + 61, "    power");
-            NCurses.MoveWindowAddString(MainWindow, top + 23, left + 61, "24v:");
-
             // NCurses.WindowAttributeSet(MainWindow, Color_MainWindowDim);
-            NCurses.MoveWindowAddString(MainWindow, top +  0, left + 61, "positions");
-            NCurses.MoveWindowAddString(MainWindow, top +  8, left + 61, "switches");
-            NCurses.MoveWindowAddString(MainWindow, top + 15, left + 61, "load");
+            // NCurses.MoveWindowAddString(MainWindow, top + 3, left + 61, "Serial Monitor");
+            // NCurses.MoveWindowAddString(MainWindow, top + 2, left + 61, "M1:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 3, left + 61, "M2:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 4, left + 61, "M3:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 5, left + 61, "M4:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 6, left + 61, "M5:");
+
+            // // NCurses.MoveWindowAddString(MainWindow, top + 10, left + 61, "    switches");
+            // NCurses.MoveWindowAddString(MainWindow, top + 10, left + 61, "X1:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 11, left + 61, "X2:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 12, left + 61, "Y :");
+            // NCurses.MoveWindowAddString(MainWindow, top + 13, left + 61, "Z :");
+
+            // // NCurses.MoveWindowAddString(MainWindow, top + 16, left + 61, "    load");
+            // NCurses.MoveWindowAddString(MainWindow, top + 17, left + 61, "M1:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 18, left + 61, "M2:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 19, left + 61, "M3:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 20, left + 61, "M4:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 21, left + 61, "M5:");
+
+            // // NCurses.MoveWindowAddString(MainWindow, top + 23, left + 61, "    power");
+            // NCurses.MoveWindowAddString(MainWindow, top + 23, left + 61, "24v:");
+            // NCurses.MoveWindowAddString(MainWindow, top + 26, left + 61, "ln:");
+
+            // // NCurses.WindowAttributeSet(MainWindow, Color_MainWindowDim);
+            // NCurses.MoveWindowAddString(MainWindow, top +  0, left + 61, "positions");
+            // NCurses.MoveWindowAddString(MainWindow, top +  8, left + 61, "switches");
+            // NCurses.MoveWindowAddString(MainWindow, top + 15, left + 61, "load");
 
         }
 
@@ -764,11 +814,11 @@ namespace Loader {
             NCurses.WindowAttributeSet(MainWindow, Color_MainWindowColor);
             string fn = _driFileInfo.filename.Split("/").Last();
             if (fn.Length > 37) fn = fn.Substring(0, 35) + "..";
-            NCurses.MoveWindowAddString(MainWindow, top + 7, left + 15, fn.PadLeft(39, ' '));
+            NCurses.MoveWindowAddString(MainWindow, top + 7, left + 15, fn.PadLeft(30, ' '));
             string headerversion = _driFileInfo.fileheader + " | v" + _driFileInfo.version.ToString();
-            NCurses.MoveWindowAddString(MainWindow, top + 8, left + 13, headerversion.PadLeft(41, ' '));
-            NCurses.MoveWindowAddString(MainWindow, top + 9, left + 16, _driFileInfo.count.ToString().PadLeft(38, ' '));
-            NCurses.MoveWindowAddString(MainWindow, top + 11, left + 24, _driFileInfo.sendIndex.ToString().PadLeft(30, ' '));
+            NCurses.MoveWindowAddString(MainWindow, top + 8, left + 13, headerversion.PadLeft(32, ' '));
+            NCurses.MoveWindowAddString(MainWindow, top + 9, left + 16, _driFileInfo.count.ToString().PadLeft(29, ' '));
+            NCurses.MoveWindowAddString(MainWindow, top + 11, left + 24, _driFileInfo.sendIndex.ToString().PadLeft(21, ' '));
         }
 
 
