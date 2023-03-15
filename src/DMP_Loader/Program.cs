@@ -20,8 +20,6 @@ namespace Loader {
         public static Queue<String> SerialMonitor = new Queue<string>();
         private SerialPort _serialPort = new SerialPort();
         private byte[] _serialMessageData = new byte[0];
-        private String _serialLastSendBytes = "";
-
         private String[] status = { };
 
         private static IntPtr Screen;
@@ -240,6 +238,20 @@ namespace Loader {
             }
         }
 
+
+        void sendEOFCommand() {
+            if (_serialPort.IsOpen) {
+                byte[] tempbuffer = new byte[10];
+                for (int i = 0; i < 10; i++) {
+                    tempbuffer[i] = 0xF5;
+                }
+                _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
+            } else {
+                serialMonitorAdd("SerialPort is disconnected.");
+
+            }
+        }
+
         void sendHeightMapCommand() {
             if (_serialPort.IsOpen) {
                 byte[] tempbuffer = new byte[10];
@@ -331,8 +343,6 @@ namespace Loader {
                         // Console.WriteLine($"file checksum {checksum} is ok! sending instruction");
                         if (_serialPort.IsOpen) {
                             _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
-                            // _serialLastSendBytes = BitConverter.ToString(tempbuffer);
-                            // _driFileInfo.index=index;
                             _driFileInfo.sendIndex = index + 1;
                             DrawMainWindowFileInfo();
                             NCurses.WindowRefresh(MainWindow);
@@ -342,10 +352,17 @@ namespace Loader {
                     } else {
                         serialMonitorAdd($"file checksum {checksum}is bad! possible file corruption, aborting..");
                     }
+                } else {
+                    if (_driFileInfo.count==0) {
+                        serialMonitorAdd("No drawing file loaded.");
+                    } else {
+                        serialMonitorAdd("EOF reached.");
+                        sendEOFCommand();
+                    }
                 }
+            } else {
+                serialMonitorAdd("No drawing file selected.");
             }
-
-
         }
 
 
@@ -512,6 +529,8 @@ namespace Loader {
             
             NCurses.TouchWindow(SerialOpenButton);
             NCurses.WindowRefresh(SerialOpenButton);
+            NCurses.TouchWindow(SerialCloseButton);
+            NCurses.WindowRefresh(SerialCloseButton);
 
             // NCurses.MoveWindow(StatusWindow,0,screen_width-20);
             NCurses.TouchWindow(StatusWindow);
@@ -877,7 +896,8 @@ namespace Loader {
             NCurses.MoveWindowAddString(MainWindow, top + 6, left + 5, "filename:");
             NCurses.MoveWindowAddString(MainWindow, top + 7, left + 5, "header:");
             NCurses.MoveWindowAddString(MainWindow, top + 8, left + 5, "drawcount:");
-            NCurses.MoveWindowAddString(MainWindow, top + 9, left + 5, "last instruction sent:");
+            NCurses.MoveWindowAddString(MainWindow, top + 9, left + 5, "last sent:");
+            NCurses.MoveWindowAddString(MainWindow, top + 10, left + 5, "home time:");
         }
 
         void DrawMainWindowFileInfo() {
