@@ -1,5 +1,3 @@
-using System;
-using System.Text.Encodings;
 using Mindmagma.Curses;
 
 namespace Loader {

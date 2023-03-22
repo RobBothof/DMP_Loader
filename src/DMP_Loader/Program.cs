@@ -1,6 +1,4 @@
-﻿using System;
-using System.Text.Encodings;
-using Mindmagma.Curses;
+﻿using Mindmagma.Curses;
 using System.IO.Ports;
 
 namespace Loader {
@@ -13,6 +11,17 @@ namespace Loader {
         public byte size;
         public Int64 index;
         public Int64 sendIndex;
+    }
+
+    public enum CommandByte 
+    {
+        Home        = 0xF0,
+        Draw        = 0xF1,
+        Reset       = 0xF2,
+        MapHeight   = 0xF3,
+        Pause       = 0xF4,
+        EOF         = 0xF5,
+        ClearHeight = 0xF6
     }
 
     class Program {
@@ -31,14 +40,13 @@ namespace Loader {
         private static IntPtr FileLoadButton;
         private static IntPtr SerialOpenButton;
         private static IntPtr SerialCloseButton;
-        // private static IntPtr RunButton;
-        // private static IntPtr StopButton;
 
         private static IntPtr HomeButton;
         private static IntPtr ResetButton;
         private static IntPtr HeightButton;
+        private static IntPtr ClearHeightButton;
         private static IntPtr PauseButton;
-        private static IntPtr BDrawButton;
+        private static IntPtr PaintButton;
 
         private static IntPtr StatusWindow;
 
@@ -57,9 +65,6 @@ namespace Loader {
         int selectedObject = 0;
         int lastselectedObject = -1;
         int lastkey = 0;
-
-        int machineState = 0;
-        // bool running = false;
 
         ScrollWindow fileWindow = new ScrollWindow(15, 28, 1, 5);
         ScrollWindow serialWindow = new ScrollWindow(15, 28, 3, 5);
@@ -127,11 +132,9 @@ namespace Loader {
                     _serialPort.Open();
                     serialMonitorAdd($"Connecting to: {portname} at 115200");
                 } catch {
-                    // Console.WriteLine("Error opening serialPort.");
                     serialMonitorAdd("Error opening serialPort.");
                 }
             } else {
-                // Console.WriteLine("SerialPort is already open.");
                 serialMonitorAdd("SerialPort is already open.");
             }
         }
@@ -183,9 +186,7 @@ namespace Loader {
                             case '@':
                                 //we have a data request
                                 Int64 index = Int64.Parse(s.Split('@', 3)[1]);
-                                // if (running) {
                                     SendInstruction(index);
-                                // }
                                 break;
                             case '$':
                                 //we have a status update
@@ -225,11 +226,11 @@ namespace Loader {
             _driFileInfo.sendIndex = 0;
         }
 
-        void sendPauseCommand() {
+        void sendCommand(CommandByte command) {
             if (_serialPort.IsOpen) {
                 byte[] tempbuffer = new byte[10];
                 for (int i = 0; i < 10; i++) {
-                    tempbuffer[i] = 0xF4;
+                    tempbuffer[i] = (byte) command;
                 }
                 _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
             } else {
@@ -238,72 +239,6 @@ namespace Loader {
             }
         }
 
-
-        void sendEOFCommand() {
-            if (_serialPort.IsOpen) {
-                byte[] tempbuffer = new byte[10];
-                for (int i = 0; i < 10; i++) {
-                    tempbuffer[i] = 0xF5;
-                }
-                _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
-            } else {
-                serialMonitorAdd("SerialPort is disconnected.");
-
-            }
-        }
-
-        void sendHeightMapCommand() {
-            if (_serialPort.IsOpen) {
-                byte[] tempbuffer = new byte[10];
-                for (int i = 0; i < 10; i++) {
-                    tempbuffer[i] = 0xF3;
-                }
-                _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
-            } else {
-                serialMonitorAdd("SerialPort is disconnected.");
-
-            }
-        }
-
-        void sendResetCommand() {
-            if (_serialPort.IsOpen) {
-                byte[] tempbuffer = new byte[10];
-                for (int i = 0; i < 10; i++) {
-                    tempbuffer[i] = 0xF2;
-                }
-                _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
-            } else {
-                serialMonitorAdd("SerialPort is disconnected.");
-
-            }
-        }
-
-        void sendDrawCommand() {
-            if (_serialPort.IsOpen) {
-                byte[] tempbuffer = new byte[10];
-                for (int i = 0; i < 10; i++) {
-                    tempbuffer[i] = 0xF1;
-                }
-                _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
-            } else {
-                serialMonitorAdd("SerialPort is disconnected.");
-
-            }
-        }
-
-        void sendHomeCommand() {
-            if (_serialPort.IsOpen) {
-                byte[] tempbuffer = new byte[10];
-                for (int i = 0; i < 10; i++) {
-                    tempbuffer[i] = 0xF0;
-                }
-                _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
-            } else {
-                serialMonitorAdd("SerialPort is disconnected.");
-
-            }
-        
-        }
         void SendInstruction(Int64 index) {
             //open one drawinstruction, check it, send to serial
             //Keep Track and Display Progress
@@ -357,7 +292,7 @@ namespace Loader {
                         serialMonitorAdd("No drawing file loaded.");
                     } else {
                         serialMonitorAdd("EOF reached.");
-                        sendEOFCommand();
+                        sendCommand(CommandByte.EOF);
                     }
                 }
             } else {
@@ -423,12 +358,10 @@ namespace Loader {
 
             RefreshFilesAndSerial();
 
-            //fileWindow.elements = new String[] { "file1.dri", "file2.dri", "file3.dri", "file4.dri", "file5.dri", "file6.dri", "file1.dri", "file2.dri", "file3.dri", "file4.dri", "file5.dri", "file6.dri" };
             fileWindow.Init(12, "no file selected", "no drawings found");
             serialWindow.Init(10, "no serial ports selected", "no serial ports found");
             fileWindow.Draw();
             serialWindow.Draw();
-
 
             MainWindow = NCurses.NewWindow(screen_height, screen_width, 0, 0);
             NCurses.WindowBackground(MainWindow, Color_MainWindowNormal);
@@ -436,11 +369,9 @@ namespace Loader {
             DrawMainWindowFileInfo();
             NCurses.WindowRefresh(MainWindow);
 
-            // StatusWindow = NCurses.NewWindow(screen_height, 20, 0, screen_width-20);
             StatusWindow = NCurses.NewWindow(screen_height - 0, 50, 20, 0);
             NCurses.WindowBackground(StatusWindow, Color_MainWindowNormal);
             DrawStatusWindow();
-            // DrawMainWindowFileInfo();
             NCurses.WindowRefresh(StatusWindow);
 
             SerialWindowButton = NCurses.NewWindow(1, serialWindow.width - 1, 3, 5);
@@ -467,16 +398,6 @@ namespace Loader {
             SerialCloseButton = NCurses.NewWindow(1, 7, 3, fileWindow.width + 12);
             DrawButton(SerialCloseButton, Color_ButtonNormal, "Close");
 
-            // RunButton = NCurses.NewWindow(1, 5, 5, fileWindow.width + 6);
-            // // if (running) {
-            //     // DrawButton(RunButton, Color_ButtonRunning, "Run");
-            // // } else {
-            //     DrawButton(RunButton, Color_ButtonNormal, "Run");
-            // // }
-
-            // StopButton = NCurses.NewWindow(1, 6, 5, fileWindow.width + 12);
-            // DrawButton(StopButton, Color_ButtonNormal, "Stop");
-
             SerialMonitorWindow = NCurses.NewWindow(screen_height - 2, screen_width - 53, 1, 52);
             SerialMonitorRedraw();
 
@@ -491,12 +412,14 @@ namespace Loader {
             PauseButton = NCurses.NewWindow(1, 7, 13, 24);
             DrawButton(PauseButton, Color_ButtonNormal, "Pause");
 
-            BDrawButton = NCurses.NewWindow(1, 6, 13, 17);
-            DrawButton(BDrawButton, Color_ButtonNormal, "Draw");
+            PaintButton = NCurses.NewWindow(1, 7, 13, 16);
+            DrawButton(PaintButton, Color_ButtonNormal, "Paint");
 
             HeightButton = NCurses.NewWindow(1, 12, 16, 34);
             DrawButton(HeightButton, Color_ButtonNormal, "Map Height");
 
+            ClearHeightButton = NCurses.NewWindow(1, 14, 16, 19);
+            DrawButton(ClearHeightButton, Color_ButtonNormal, "Clear Height");
         }
 
         void Resize() {
@@ -518,21 +441,22 @@ namespace Loader {
 
             NCurses.TouchWindow(HomeButton);
             NCurses.WindowRefresh(HomeButton);
-            NCurses.TouchWindow(BDrawButton);
-            NCurses.WindowRefresh(BDrawButton);
+            NCurses.TouchWindow(PaintButton);
+            NCurses.WindowRefresh(PaintButton);
             NCurses.TouchWindow(ResetButton);
             NCurses.WindowRefresh(ResetButton);
             NCurses.TouchWindow(PauseButton);
             NCurses.WindowRefresh(PauseButton);
             NCurses.TouchWindow(HeightButton);
             NCurses.WindowRefresh(HeightButton);
-            
+            NCurses.TouchWindow(ClearHeightButton);
+            NCurses.WindowRefresh(ClearHeightButton);
+
             NCurses.TouchWindow(SerialOpenButton);
             NCurses.WindowRefresh(SerialOpenButton);
             NCurses.TouchWindow(SerialCloseButton);
             NCurses.WindowRefresh(SerialCloseButton);
 
-            // NCurses.MoveWindow(StatusWindow,0,screen_width-20);
             NCurses.TouchWindow(StatusWindow);
             NCurses.WindowRefresh(StatusWindow);
 
@@ -552,39 +476,41 @@ namespace Loader {
                 if (!fileWindow.selected && !serialWindow.selected) {
                     if (c == 66) { //keydown
                         switch (selectedObject) {
-                            case 0:  selectedObject = 2; break;
-                            case 1:  selectedObject = 4; break;
-                            case 2:  selectedObject = 5; break;
-                            case 3:  selectedObject = 8; break;
-                            case 4:  selectedObject = 9; break;
-                            case 5:  selectedObject = 6; break;
-                            case 6:  selectedObject = 0; break;
-                            case 7:  selectedObject = 0; break;
-                            case 8:  selectedObject = 10; break;
-                            case 9:  selectedObject = 10; break;
-                            case 10: selectedObject = 1; break;
+                            case 0:  selectedObject = 2;  break;
+                            case 1:  selectedObject = 4;  break;
+                            case 2:  selectedObject = 5;  break;
+                            case 3:  selectedObject = 8;  break;
+                            case 4:  selectedObject = 9;  break;
+                            case 5:  selectedObject = 6;  break;
+                            case 6:  selectedObject = 10;  break;
+                            case 7:  selectedObject = 10;  break;
+                            case 8:  selectedObject = 11; break;
+                            case 9:  selectedObject = 11; break;
+                            case 10: selectedObject = 0;  break;
+                            case 11: selectedObject = 1;  break;
                         }
                     }
                     if (c == 65) { //keyup
                         switch (selectedObject) {
-                            case 0: selectedObject = 6; break;
-                            case 1: selectedObject = 10; break;
-                            case 2: selectedObject = 0; break;
-                            case 3: selectedObject = 1; break;
-                            case 4: selectedObject = 1; break;
-                            case 5: selectedObject = 2; break;
-                            case 6: selectedObject = 5; break;
-                            case 7: selectedObject = 2; break;
-                            case 8:  selectedObject = 3; break;
-                            case 9:  selectedObject = 4; break;
-                            case 10: selectedObject = 9; break;                            
+                            case 0:  selectedObject = 10; break;
+                            case 1:  selectedObject = 11; break;
+                            case 2:  selectedObject = 0;  break;
+                            case 3:  selectedObject = 1;  break;
+                            case 4:  selectedObject = 1;  break;
+                            case 5:  selectedObject = 2;  break;
+                            case 6:  selectedObject = 5;  break;
+                            case 7:  selectedObject = 2;  break;
+                            case 8:  selectedObject = 3;  break;
+                            case 9:  selectedObject = 4;  break;
+                            case 10: selectedObject = 7;  break;                            
+                            case 11: selectedObject = 9;  break;                            
                         }
                     }
                     if (c == 9 || c == 67) { // TAB or right
-                        selectedObject = (selectedObject + 1) % 11;
+                        selectedObject = (selectedObject + 1) % 12;
                     }
                     if (c == 90 || c == 68) { //shifttab or left
-                        selectedObject = (selectedObject + 10) % 11;
+                        selectedObject = (selectedObject + 11) % 12;
                     }
 
                     if (c == 10) { //Return
@@ -635,23 +561,27 @@ namespace Loader {
                                     break;
                                 }
                             case 6: {
-                                    sendDrawCommand();
+                                    sendCommand(CommandByte.Draw);
                                     break;
                                 }
                             case 7: {
-                                    sendPauseCommand();
+                                    sendCommand(CommandByte.Pause);
                                     break;
                                 }
                             case 8: {
-                                    sendResetCommand();
+                                    sendCommand(CommandByte.Reset);
                                     break;
                                 }
                             case 9: {
-                                    sendHomeCommand();
+                                    sendCommand(CommandByte.Home);
                                     break;
                                 }
                             case 10: {
-                                    sendHeightMapCommand();
+                                    sendCommand(CommandByte.ClearHeight);
+                                    break;
+                                }
+                            case 11: {
+                                    sendCommand(CommandByte.MapHeight);
                                     break;
                                 }
                         }
@@ -723,11 +653,12 @@ namespace Loader {
                         }
                     case 4: DrawButton(SerialCloseButton, Color_ButtonNormal, "Close"); break;
                     case 5: DrawButton(RefreshButton, Color_ButtonNormal, "Refresh"); break;
-                    case 6: DrawButton(BDrawButton, Color_ButtonNormal, "Draw"); break;
+                    case 6: DrawButton(PaintButton, Color_ButtonNormal, "Paint"); break;
                     case 7: DrawButton(PauseButton, Color_ButtonNormal, "Pause"); break;
                     case 8: DrawButton(ResetButton, Color_ButtonNormal, "Reset"); break;
                     case 9: DrawButton(HomeButton, Color_ButtonNormal, "Home"); break;
-                    case 10: DrawButton(HeightButton, Color_ButtonNormal, "Map Height"); break;
+                    case 10: DrawButton(ClearHeightButton, Color_ButtonNormal, "Clear Height"); break;
+                    case 11: DrawButton(HeightButton, Color_ButtonNormal, "Map Height"); break;
                 }
 
                 switch (selectedObject) {
@@ -737,11 +668,12 @@ namespace Loader {
                     case 3: DrawButton(SerialOpenButton, Color_ButtonHot, "Open"); break;
                     case 4: DrawButton(SerialCloseButton, Color_ButtonHot, "Close"); break;
                     case 5: DrawButton(RefreshButton, Color_ButtonHot, "Refresh"); break;
-                    case 6: DrawButton(BDrawButton, Color_ButtonHot, "Draw"); break;
+                    case 6: DrawButton(PaintButton, Color_ButtonHot, "Paint"); break;
                     case 7: DrawButton(PauseButton, Color_ButtonHot, "Pause"); break;
                     case 8: DrawButton(ResetButton, Color_ButtonHot, "Reset"); break;
                     case 9: DrawButton(HomeButton, Color_ButtonHot, "Home"); break;
-                    case 10: DrawButton(HeightButton, Color_ButtonHot, "Map Height"); break;
+                    case 10: DrawButton(ClearHeightButton, Color_ButtonHot, "Clear Height"); break;
+                    case 11: DrawButton(HeightButton, Color_ButtonHot, "Map Height"); break;
 
                 }
                 lastselectedObject = selectedObject;
@@ -789,12 +721,14 @@ namespace Loader {
             NCurses.TouchWindow(PauseButton);
             NCurses.WindowRefresh(PauseButton);
 
-            NCurses.TouchWindow(BDrawButton);
-            NCurses.WindowRefresh(BDrawButton);
+            NCurses.TouchWindow(PaintButton);
+            NCurses.WindowRefresh(PaintButton);
 
             NCurses.TouchWindow(HeightButton);
             NCurses.WindowRefresh(HeightButton);
 
+            NCurses.TouchWindow(ClearHeightButton);
+            NCurses.WindowRefresh(ClearHeightButton);
         }
 
         void DrawButton(IntPtr win, uint color, string text) {
