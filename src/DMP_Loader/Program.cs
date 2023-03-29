@@ -19,7 +19,7 @@ namespace Loader {
         Draw        = 0xF1,
         Reset       = 0xF2,
         MapHeight   = 0xF3,
-        Pause       = 0xF4,
+        Stop        = 0xF4,
         EOF         = 0xF5,
         ClearHeight = 0xF6
     }
@@ -45,7 +45,7 @@ namespace Loader {
         private static IntPtr ResetButton;
         private static IntPtr HeightButton;
         private static IntPtr ClearHeightButton;
-        private static IntPtr PauseButton;
+        private static IntPtr StopButton;
         private static IntPtr PaintButton;
 
         private static IntPtr StatusWindow;
@@ -409,10 +409,10 @@ namespace Loader {
             ResetButton = NCurses.NewWindow(1, 7, 13, 32);
             DrawButton(ResetButton, Color_ButtonNormal, "Reset");
 
-            PauseButton = NCurses.NewWindow(1, 7, 13, 24);
-            DrawButton(PauseButton, Color_ButtonNormal, "Pause");
+            StopButton = NCurses.NewWindow(1, 6, 13, 25);
+            DrawButton(StopButton, Color_ButtonNormal, "Stop");
 
-            PaintButton = NCurses.NewWindow(1, 7, 13, 16);
+            PaintButton = NCurses.NewWindow(1, 7, 13, 17);
             DrawButton(PaintButton, Color_ButtonNormal, "Paint");
 
             HeightButton = NCurses.NewWindow(1, 12, 16, 34);
@@ -445,8 +445,8 @@ namespace Loader {
             NCurses.WindowRefresh(PaintButton);
             NCurses.TouchWindow(ResetButton);
             NCurses.WindowRefresh(ResetButton);
-            NCurses.TouchWindow(PauseButton);
-            NCurses.WindowRefresh(PauseButton);
+            NCurses.TouchWindow(StopButton);
+            NCurses.WindowRefresh(StopButton);
             NCurses.TouchWindow(HeightButton);
             NCurses.WindowRefresh(HeightButton);
             NCurses.TouchWindow(ClearHeightButton);
@@ -565,7 +565,7 @@ namespace Loader {
                                     break;
                                 }
                             case 7: {
-                                    sendCommand(CommandByte.Pause);
+                                    sendCommand(CommandByte.Stop);
                                     break;
                                 }
                             case 8: {
@@ -654,7 +654,7 @@ namespace Loader {
                     case 4: DrawButton(SerialCloseButton, Color_ButtonNormal, "Close"); break;
                     case 5: DrawButton(RefreshButton, Color_ButtonNormal, "Refresh"); break;
                     case 6: DrawButton(PaintButton, Color_ButtonNormal, "Paint"); break;
-                    case 7: DrawButton(PauseButton, Color_ButtonNormal, "Pause"); break;
+                    case 7: DrawButton(StopButton, Color_ButtonNormal, "Stop"); break;
                     case 8: DrawButton(ResetButton, Color_ButtonNormal, "Reset"); break;
                     case 9: DrawButton(HomeButton, Color_ButtonNormal, "Home"); break;
                     case 10: DrawButton(ClearHeightButton, Color_ButtonNormal, "Clear Height"); break;
@@ -669,7 +669,7 @@ namespace Loader {
                     case 4: DrawButton(SerialCloseButton, Color_ButtonHot, "Close"); break;
                     case 5: DrawButton(RefreshButton, Color_ButtonHot, "Refresh"); break;
                     case 6: DrawButton(PaintButton, Color_ButtonHot, "Paint"); break;
-                    case 7: DrawButton(PauseButton, Color_ButtonHot, "Pause"); break;
+                    case 7: DrawButton(StopButton, Color_ButtonHot, "Stop"); break;
                     case 8: DrawButton(ResetButton, Color_ButtonHot, "Reset"); break;
                     case 9: DrawButton(HomeButton, Color_ButtonHot, "Home"); break;
                     case 10: DrawButton(ClearHeightButton, Color_ButtonHot, "Clear Height"); break;
@@ -718,8 +718,8 @@ namespace Loader {
             NCurses.TouchWindow(ResetButton);
             NCurses.WindowRefresh(ResetButton);
 
-            NCurses.TouchWindow(PauseButton);
-            NCurses.WindowRefresh(PauseButton);
+            NCurses.TouchWindow(StopButton);
+            NCurses.WindowRefresh(StopButton);
 
             NCurses.TouchWindow(PaintButton);
             NCurses.WindowRefresh(PaintButton);
@@ -795,13 +795,14 @@ namespace Loader {
             if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 19 + 2, status[19]);
             if (l > 20) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 19, status[20]);
             if (l > 21) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 19 + 2, status[21]);
-
             if (l > 22) {
                 int functioncode = int.Parse(status[22]);
-                if (functioncode == 0) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Waiting".PadLeft(13, ' '));
-                if (functioncode == 1) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Homing".PadLeft(13, ' '));
+                if (functioncode == 0) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Idle".PadLeft(13, ' '));
+                if (functioncode == 1) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Waiting".PadLeft(13, ' '));
                 if (functioncode == 2) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Moving".PadLeft(13, ' '));
                 if (functioncode == 3) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Drawing".PadLeft(13, ' '));
+                if (functioncode == 4) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Homing".PadLeft(13, ' '));
+                if (functioncode == 5) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Mapping".PadLeft(13, ' '));
             }
             if (l > 23) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 42, status[23].PadLeft(8, ' '));
 
