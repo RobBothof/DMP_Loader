@@ -754,10 +754,11 @@ namespace Loader {
             NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 1, "M4:");
             NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 1, "M5:");
 
-            NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 15, "X1:");
-            NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 15, "X2:");
-            NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 15, " Y:");
-            NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 15, " Z:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 15, " P:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 15, "Y1:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 15, "Y2:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 15, " X:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 15, " Z:");
 
             NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 26, "M1:");
             NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 26, "M2:");
@@ -786,22 +787,23 @@ namespace Loader {
             if (l > 12) NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 42, (status[12] + " mA").PadLeft(8));
 
             if (l > 13) NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 19, status[13]);
-            if (l > 14) NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 19 + 2, status[14]);
-            if (l > 15) NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 19, status[15]);
-            if (l > 16) NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 19 + 2, status[16]);
-            if (l > 17) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 19, status[17]);
-            if (l > 18) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 19 + 2, status[18]);
-            if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 19, status[19]);
-            if (l > 20) NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 19 + 2, status[20]);
+            if (l > 14) NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 19, status[14]);
+            if (l > 15) NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 19 + 2, status[15]);
+            if (l > 16) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 19, status[16]);
+            if (l > 17) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 19 + 2, status[17]);
+            if (l > 18) NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 19, status[18]);
+            if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 19 + 2, status[19]);
+            if (l > 20) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 19, status[20]);
+            if (l > 21) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 19 + 2, status[21]);
 
-            if (l > 21) {
-                int functioncode = int.Parse(status[21]);
+            if (l > 22) {
+                int functioncode = int.Parse(status[22]);
                 if (functioncode == 0) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Waiting".PadLeft(13, ' '));
                 if (functioncode == 1) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Homing".PadLeft(13, ' '));
                 if (functioncode == 2) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Moving".PadLeft(13, ' '));
                 if (functioncode == 3) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Drawing".PadLeft(13, ' '));
             }
-            if (l > 22) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 42, status[22].PadLeft(8, ' '));
+            if (l > 23) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 42, status[23].PadLeft(8, ' '));
 
         }
         void DrawMainWindow() {
