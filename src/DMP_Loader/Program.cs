@@ -1,8 +1,10 @@
 ﻿using Mindmagma.Curses;
 using System.IO.Ports;
 
-namespace Loader {
-    public struct DrawInstructionFileInfo {
+namespace Loader
+{
+    public struct DrawInstructionFileInfo
+    {
         public String filename;
         public String fileheader;
         public Int32 version;
@@ -13,18 +15,19 @@ namespace Loader {
         public Int64 sendIndex;
     }
 
-    public enum CommandByte 
+    public enum CommandByte
     {
-        Home        = 0xF0,
-        Draw        = 0xF1,
-        Reset       = 0xF2,
-        MapHeight   = 0xF3,
-        Stop        = 0xF4,
-        EOF         = 0xF5,
+        Home = 0xF0,
+        Draw = 0xF1,
+        Reset = 0xF2,
+        MapHeight = 0xF3,
+        Stop = 0xF4,
+        EOF = 0xF5,
         ClearHeight = 0xF6
     }
 
-    class Program {
+    class Program
+    {
         private DrawInstructionFileInfo _driFileInfo;
         public static Queue<String> SerialMonitor = new Queue<string>();
         private SerialPort _serialPort = new SerialPort();
@@ -69,11 +72,13 @@ namespace Loader {
         ScrollWindow fileWindow = new ScrollWindow(15, 28, 1, 5);
         ScrollWindow serialWindow = new ScrollWindow(15, 28, 3, 5);
 
-        static int Main(string[] args) {
+        static int Main(string[] args)
+        {
             return new Program().Run();
         }
 
-        int Run() {
+        int Run()
+        {
             //
             _driFileInfo.fileheader = "none";
             _driFileInfo.filename = "no file loaded";
@@ -83,7 +88,8 @@ namespace Loader {
 
             Screen = NCurses.InitScreen();
 
-            if (!NCurses.HasColors()) {
+            if (!NCurses.HasColors())
+            {
                 Console.WriteLine("Sorry, this application currently requires terminal colors.");
                 NCurses.EndWin();
                 if (_serialPort.IsOpen) _serialPort.Close();
@@ -93,9 +99,11 @@ namespace Loader {
             InitGui();
 
             int key = 0;
-            while ((key = NCurses.GetChar()) != 113) { // q to quit
+            while ((key = NCurses.GetChar()) != 113)
+            { // q to quit
                 checkSerial();
-                if (screen_height != NCurses.Lines || screen_width != NCurses.Columns) {
+                if (screen_height != NCurses.Lines || screen_width != NCurses.Columns)
+                {
                     Resize();
                 }
                 Update(key);
@@ -107,7 +115,8 @@ namespace Loader {
             return 1;
         }
 
-        void RefreshFilesAndSerial() {
+        void RefreshFilesAndSerial()
+        {
             String lastfile = fileWindow.getFullSelected();
             fileWindow.elements = Directory.GetFiles("/home/robber/drawings", "*.dri");
             fileWindow.reselect(lastfile);
@@ -117,8 +126,10 @@ namespace Loader {
             serialWindow.reselect(lastport);
         }
 
-        void ConnectSerialPort(String portname) {
-            if (!_serialPort.IsOpen) {
+        void ConnectSerialPort(String portname)
+        {
+            if (!_serialPort.IsOpen)
+            {
                 _serialPort = new SerialPort();
                 _serialPort.PortName = portname;
                 _serialPort.BaudRate = 115200;
@@ -128,25 +139,33 @@ namespace Loader {
                 _serialPort.Handshake = Handshake.None;
                 _serialPort.RtsEnable = true;
                 _serialPort.DtrEnable = true;
-                try {
+                try
+                {
                     _serialPort.Open();
                     serialMonitorAdd($"Connecting to: {portname} at 115200");
-                } catch {
+                }
+                catch
+                {
                     serialMonitorAdd("Error opening serialPort.");
                 }
-            } else {
+            }
+            else
+            {
                 serialMonitorAdd("SerialPort is already open.");
             }
         }
 
-        void DisConnectSerialPort() {
+        void DisConnectSerialPort()
+        {
             serialMonitorAdd($"Disconnected from: {_serialPort.PortName}");
             if (_serialPort.IsOpen) _serialPort.Close();
         }
 
-        void serialMonitorAdd(string s) {
+        void serialMonitorAdd(string s)
+        {
             SerialMonitor.Enqueue(s);
-            while (SerialMonitor.Count > screen_height - 4) {
+            while (SerialMonitor.Count > screen_height - 4)
+            {
                 SerialMonitor.Dequeue();
             }
             NCurses.ClearWindow(SerialMonitorWindow);
@@ -154,15 +173,18 @@ namespace Loader {
             NCurses.Box(SerialMonitorWindow, 'x', 'q');
             NCurses.WindowAttributeSet(SerialMonitorWindow, Color_MainWindowNormal);
             NCurses.MoveWindowAddString(SerialMonitorWindow, 0, 2, "[ SerialMonitor ]");
-            for (int i = 0; i < Math.Min(screen_height - 4, SerialMonitor.Count); i++) {
+            for (int i = 0; i < Math.Min(screen_height - 4, SerialMonitor.Count); i++)
+            {
                 NCurses.MoveWindowAddString(SerialMonitorWindow, i + 1, 2, SerialMonitor.ToArray()[Math.Max(screen_height - 4, SerialMonitor.Count) - (screen_height - 4) + i]);
             }
             NCurses.WindowRefresh(SerialMonitorWindow);
             //redraw serial window
         }
 
-        void SerialMonitorRedraw() {
-            while (SerialMonitor.Count > screen_height - 4) {
+        void SerialMonitorRedraw()
+        {
+            while (SerialMonitor.Count > screen_height - 4)
+            {
                 SerialMonitor.Dequeue();
             }
             NCurses.ClearWindow(SerialMonitorWindow);
@@ -170,23 +192,29 @@ namespace Loader {
             NCurses.Box(SerialMonitorWindow, 'x', 'q');
             NCurses.WindowAttributeSet(SerialMonitorWindow, Color_MainWindowNormal);
             NCurses.MoveWindowAddString(SerialMonitorWindow, 0, 2, "[ SerialMonitor ]");
-            for (int i = 0; i < Math.Min(screen_height - 4, SerialMonitor.Count); i++) {
+            for (int i = 0; i < Math.Min(screen_height - 4, SerialMonitor.Count); i++)
+            {
                 NCurses.MoveWindowAddString(SerialMonitorWindow, i + 1, 2, SerialMonitor.ToArray()[Math.Max(screen_height - 4, SerialMonitor.Count) - (screen_height - 4) + i]);
             }
             NCurses.WindowRefresh(SerialMonitorWindow);
         }
 
-        void checkSerial() {
-            if (_serialPort.IsOpen) {
+        void checkSerial()
+        {
+            if (_serialPort.IsOpen)
+            {
                 int b = _serialPort.BytesToRead;
-                if (b > 0) {
+                if (b > 0)
+                {
                     String s = _serialPort.ReadLine();
-                    if (s.Length > 0) {
-                        switch (s[0]) {
+                    if (s.Length > 0)
+                    {
+                        switch (s[0])
+                        {
                             case '@':
                                 //we have a data request
                                 Int64 index = Int64.Parse(s.Split('@', 3)[1]);
-                                    SendInstruction(index);
+                                SendInstruction(index);
                                 break;
                             case '$':
                                 //we have a status update
@@ -206,10 +234,13 @@ namespace Loader {
             }
         }
 
-        void LoadFileData() {
-            if (File.Exists(fileWindow.getFullSelected())) {
+        void LoadFileData()
+        {
+            if (File.Exists(fileWindow.getFullSelected()))
+            {
                 _driFileInfo.filename = fileWindow.getFullSelected();
-                using (FileStream fileStream = new FileStream(fileWindow.getFullSelected(), FileMode.Open)) {
+                using (FileStream fileStream = new FileStream(fileWindow.getFullSelected(), FileMode.Open))
+                {
                     byte[] tempbuffer = new byte[42];
                     // Write the data to the file, byte by byte.
                     fileStream.Seek(0, SeekOrigin.Begin);
@@ -226,28 +257,37 @@ namespace Loader {
             _driFileInfo.sendIndex = 0;
         }
 
-        void sendCommand(CommandByte command) {
-            if (_serialPort.IsOpen) {
+        void sendCommand(CommandByte command)
+        {
+            if (_serialPort.IsOpen)
+            {
                 byte[] tempbuffer = new byte[10];
-                for (int i = 0; i < 10; i++) {
-                    tempbuffer[i] = (byte) command;
+                for (int i = 0; i < 10; i++)
+                {
+                    tempbuffer[i] = (byte)command;
                 }
                 _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
-            } else {
+            }
+            else
+            {
                 serialMonitorAdd("SerialPort is disconnected.");
 
             }
         }
 
-        void SendInstruction(Int64 index) {
+        void SendInstruction(Int64 index)
+        {
             //open one drawinstruction, check it, send to serial
             //Keep Track and Display Progress
 
-            if (File.Exists(fileWindow.getFullSelected())) {
-                if (index < _driFileInfo.count) {
+            if (File.Exists(fileWindow.getFullSelected()))
+            {
+                if (index < _driFileInfo.count)
+                {
                     _driFileInfo.filename = fileWindow.getFullSelected();
                     byte[] tempbuffer = new byte[_driFileInfo.size];
-                    using (FileStream fileStream = new FileStream(fileWindow.getFullSelected(), FileMode.Open)) {
+                    using (FileStream fileStream = new FileStream(fileWindow.getFullSelected(), FileMode.Open))
+                    {
                         fileStream.Seek(_driFileInfo.start + _driFileInfo.size * index, SeekOrigin.Begin);
                         fileStream.Read(tempbuffer);
                     }
@@ -255,53 +295,74 @@ namespace Loader {
                     bool msgOK = true;
                     int numbytes = 0;
                     int checksum = 0;
-                    for (int i = 0; i < tempbuffer.Length; i++) {
-                        if (msgOK) {
-                            if (i < 10) {
-                                if (tempbuffer[i] != 0xFF) {
+                    for (int i = 0; i < tempbuffer.Length; i++)
+                    {
+                        if (msgOK)
+                        {
+                            if (i < 10)
+                            {
+                                if (tempbuffer[i] != 0xFF)
+                                {
                                     msgOK = false;
                                 }
                             }
-                            if (i == 10) {
+                            if (i == 10)
+                            {
                                 numbytes = tempbuffer[10];
                             }
-                            if (i > 10 && i < 11 + numbytes) {
+                            if (i > 10 && i < 11 + numbytes)
+                            {
                                 checksum += tempbuffer[i];
                             }
-                            if (i == 11 + numbytes) {
+                            if (i == 11 + numbytes)
+                            {
                                 if (checksum != BitConverter.ToInt32(tempbuffer, i)) msgOK = false;
                             }
                         }
                     }
 
-                    if (msgOK) {
+                    if (msgOK)
+                    {
                         // Console.WriteLine($"file checksum {checksum} is ok! sending instruction");
-                        if (_serialPort.IsOpen) {
+                        if (_serialPort.IsOpen)
+                        {
                             _serialPort.Write(tempbuffer, 0, tempbuffer.Length);
                             _driFileInfo.sendIndex = index + 1;
                             DrawMainWindowFileInfo();
                             NCurses.WindowRefresh(MainWindow);
-                        } else {
+                        }
+                        else
+                        {
                             serialMonitorAdd("SerialPort is disconnected.");
                         }
-                    } else {
+                    }
+                    else
+                    {
                         serialMonitorAdd($"file checksum {checksum}is bad! possible file corruption, aborting..");
                     }
-                } else {
-                    if (_driFileInfo.count==0) {
+                }
+                else
+                {
+                    if (_driFileInfo.count == 0)
+                    {
                         serialMonitorAdd("No drawing file loaded.");
-                    } else {
+                    }
+                    else
+                    {
                         serialMonitorAdd("EOF reached.");
                         sendCommand(CommandByte.EOF);
                     }
                 }
-            } else {
+            }
+            else
+            {
                 serialMonitorAdd("No drawing file selected.");
             }
         }
 
 
-        void InitGui() {
+        void InitGui()
+        {
             NCurses.NoDelay(Screen, true);
             NCurses.NoEcho();
             NCurses.SetCursor(0);
@@ -389,9 +450,12 @@ namespace Loader {
             DrawButton(FileLoadButton, Color_ButtonNormal, "Load");
 
             SerialOpenButton = NCurses.NewWindow(1, 6, 3, fileWindow.width + 5);
-            if (_serialPort.IsOpen) {
+            if (_serialPort.IsOpen)
+            {
                 DrawButton(SerialOpenButton, Color_ButtonRunning, "Open");
-            } else {
+            }
+            else
+            {
                 DrawButton(SerialOpenButton, Color_ButtonNormal, "Open");
             }
 
@@ -422,7 +486,8 @@ namespace Loader {
             DrawButton(ClearHeightButton, Color_ButtonNormal, "Clear Height");
         }
 
-        void Resize() {
+        void Resize()
+        {
             screen_height = NCurses.Lines;
             screen_width = NCurses.Columns;
             NCurses.Clear();
@@ -462,93 +527,115 @@ namespace Loader {
 
             SerialMonitorRedraw();
 
-            if (fileWindow.selected) {
+            if (fileWindow.selected)
+            {
                 fileWindow.TouchRefresh();
             }
-            if (serialWindow.selected) {
+            if (serialWindow.selected)
+            {
                 serialWindow.TouchRefresh();
             }
         }
 
-        void Update(int c) {
-            if (c != -1) {
+        void Update(int c)
+        {
+            if (c != -1)
+            {
                 lastkey = c;
-                if (!fileWindow.selected && !serialWindow.selected) {
-                    if (c == 66) { //keydown
-                        switch (selectedObject) {
-                            case 0:  selectedObject = 2;  break;
-                            case 1:  selectedObject = 4;  break;
-                            case 2:  selectedObject = 5;  break;
-                            case 3:  selectedObject = 8;  break;
-                            case 4:  selectedObject = 9;  break;
-                            case 5:  selectedObject = 6;  break;
-                            case 6:  selectedObject = 10;  break;
-                            case 7:  selectedObject = 10;  break;
-                            case 8:  selectedObject = 11; break;
-                            case 9:  selectedObject = 11; break;
-                            case 10: selectedObject = 0;  break;
-                            case 11: selectedObject = 1;  break;
+                if (!fileWindow.selected && !serialWindow.selected)
+                {
+                    if (c == 66)
+                    { //keydown
+                        switch (selectedObject)
+                        {
+                            case 0: selectedObject = 2; break;
+                            case 1: selectedObject = 4; break;
+                            case 2: selectedObject = 5; break;
+                            case 3: selectedObject = 8; break;
+                            case 4: selectedObject = 9; break;
+                            case 5: selectedObject = 6; break;
+                            case 6: selectedObject = 10; break;
+                            case 7: selectedObject = 10; break;
+                            case 8: selectedObject = 11; break;
+                            case 9: selectedObject = 11; break;
+                            case 10: selectedObject = 0; break;
+                            case 11: selectedObject = 1; break;
                         }
                     }
-                    if (c == 65) { //keyup
-                        switch (selectedObject) {
-                            case 0:  selectedObject = 10; break;
-                            case 1:  selectedObject = 11; break;
-                            case 2:  selectedObject = 0;  break;
-                            case 3:  selectedObject = 1;  break;
-                            case 4:  selectedObject = 1;  break;
-                            case 5:  selectedObject = 2;  break;
-                            case 6:  selectedObject = 5;  break;
-                            case 7:  selectedObject = 2;  break;
-                            case 8:  selectedObject = 3;  break;
-                            case 9:  selectedObject = 4;  break;
-                            case 10: selectedObject = 7;  break;                            
-                            case 11: selectedObject = 9;  break;                            
+                    if (c == 65)
+                    { //keyup
+                        switch (selectedObject)
+                        {
+                            case 0: selectedObject = 10; break;
+                            case 1: selectedObject = 11; break;
+                            case 2: selectedObject = 0; break;
+                            case 3: selectedObject = 1; break;
+                            case 4: selectedObject = 1; break;
+                            case 5: selectedObject = 2; break;
+                            case 6: selectedObject = 5; break;
+                            case 7: selectedObject = 2; break;
+                            case 8: selectedObject = 3; break;
+                            case 9: selectedObject = 4; break;
+                            case 10: selectedObject = 7; break;
+                            case 11: selectedObject = 9; break;
                         }
                     }
-                    if (c == 9 || c == 67) { // TAB or right
+                    if (c == 9 || c == 67)
+                    { // TAB or right
                         selectedObject = (selectedObject + 1) % 12;
                     }
-                    if (c == 90 || c == 68) { //shifttab or left
+                    if (c == 90 || c == 68)
+                    { //shifttab or left
                         selectedObject = (selectedObject + 11) % 12;
                     }
 
-                    if (c == 10) { //Return
-                        switch (selectedObject) {
-                            case 0: {
-                                    if (fileWindow.elements.Length > 0) {
+                    if (c == 10)
+                    { //Return
+                        switch (selectedObject)
+                        {
+                            case 0:
+                                {
+                                    if (fileWindow.elements.Length > 0)
+                                    {
                                         fileWindow.selected = true;
                                         fileWindow.TouchRefresh();
                                     }
                                     break;
                                 }
-                            case 1: {
+                            case 1:
+                                {
                                     LoadFileData();
                                     DrawMainWindowFileInfo();
                                     NCurses.WindowRefresh(MainWindow);
 
                                     break;
                                 }
-                            case 2: {
-                                    if (serialWindow.elements.Length > 0) {
+                            case 2:
+                                {
+                                    if (serialWindow.elements.Length > 0)
+                                    {
                                         serialWindow.selected = true;
                                         serialWindow.TouchRefresh();
                                     }
                                     break;
                                 }
-                            case 3: {
+                            case 3:
+                                {
                                     ConnectSerialPort(serialWindow.getFullSelected());
                                     break;
 
                                 }
-                            case 4: {
-                                    if (_serialPort.IsOpen) {
+                            case 4:
+                                {
+                                    if (_serialPort.IsOpen)
+                                    {
                                         DisConnectSerialPort();
                                         DrawButton(SerialOpenButton, Color_ButtonNormal, "Open"); break;
                                     }
                                     break;
                                 }
-                            case 5: {
+                            case 5:
+                                {
                                     RefreshFilesAndSerial();
                                     fileWindow.Resize(screen_height);
                                     fileWindow.Draw();
@@ -560,45 +647,57 @@ namespace Loader {
                                     // Redraw();
                                     break;
                                 }
-                            case 6: {
+                            case 6:
+                                {
                                     sendCommand(CommandByte.Draw);
                                     break;
                                 }
-                            case 7: {
+                            case 7:
+                                {
                                     sendCommand(CommandByte.Stop);
                                     break;
                                 }
-                            case 8: {
+                            case 8:
+                                {
                                     sendCommand(CommandByte.Reset);
                                     break;
                                 }
-                            case 9: {
+                            case 9:
+                                {
                                     sendCommand(CommandByte.Home);
                                     break;
                                 }
-                            case 10: {
+                            case 10:
+                                {
                                     sendCommand(CommandByte.ClearHeight);
                                     break;
                                 }
-                            case 11: {
+                            case 11:
+                                {
                                     sendCommand(CommandByte.MapHeight);
                                     break;
                                 }
                         }
                     }
-                } else {
-                    if (fileWindow.selected) {
-                        if (c == 10) { //Return
+                }
+                else
+                {
+                    if (fileWindow.selected)
+                    {
+                        if (c == 10)
+                        { //Return
                             fileWindow.selected = false;
                             fileWindow.select();
                             Redraw();
                         }
-                        if (c == 9 || c == 66) { // TAB or down
+                        if (c == 9 || c == 66)
+                        { // TAB or down
                             fileWindow.Next();
                             fileWindow.Draw();
                             fileWindow.TouchRefresh();
                         }
-                        if (c == 90 || c == 65) { //shifttab or up
+                        if (c == 90 || c == 65)
+                        { //shifttab or up
                             fileWindow.Prev();
                             fileWindow.Draw();
                             fileWindow.TouchRefresh();
@@ -606,18 +705,22 @@ namespace Loader {
 
                     }
 
-                    if (serialWindow.selected) {
-                        if (c == 10) { //Return
+                    if (serialWindow.selected)
+                    {
+                        if (c == 10)
+                        { //Return
                             serialWindow.select();
                             serialWindow.selected = false;
                             Redraw();
                         }
-                        if (c == 9 || c == 66) { // TAB or down
+                        if (c == 9 || c == 66)
+                        { // TAB or down
                             serialWindow.Next();
                             serialWindow.Draw();
                             serialWindow.TouchRefresh();
                         }
-                        if (c == 90 || c == 65) { //shifttab or up
+                        if (c == 90 || c == 65)
+                        { //shifttab or up
                             serialWindow.Prev();
                             serialWindow.Draw();
                             serialWindow.TouchRefresh();
@@ -625,29 +728,40 @@ namespace Loader {
                     }
                 }
 
-            } else {
-                if (lastkey == 27) {
+            }
+            else
+            {
+                if (lastkey == 27)
+                {
                     //we have a proper escape
                     lastkey = 0;
-                    if (fileWindow.selected) {
+                    if (fileWindow.selected)
+                    {
                         fileWindow.selected = false;
                         Redraw();
                     }
-                    if (serialWindow.selected) {
+                    if (serialWindow.selected)
+                    {
                         serialWindow.selected = false;
                         Redraw();
                     }
                 }
             }
-            if (lastselectedObject != selectedObject) {
-                switch (lastselectedObject) {
+            if (lastselectedObject != selectedObject)
+            {
+                switch (lastselectedObject)
+                {
                     case 0: DrawButton(FileWindowButton, Color_ButtonNormal, fileWindow.getSelected()); break;
                     case 1: DrawButton(FileLoadButton, Color_ButtonNormal, "Load"); break;
                     case 2: DrawButton(SerialWindowButton, Color_ButtonNormal, serialWindow.getSelected()); break;
-                    case 3: {
-                            if (_serialPort.IsOpen) {
+                    case 3:
+                        {
+                            if (_serialPort.IsOpen)
+                            {
                                 DrawButton(SerialOpenButton, Color_ButtonRunning, "Open"); break;
-                            } else {
+                            }
+                            else
+                            {
                                 DrawButton(SerialOpenButton, Color_ButtonNormal, "Open"); break;
                             }
                         }
@@ -661,7 +775,8 @@ namespace Loader {
                     case 11: DrawButton(HeightButton, Color_ButtonNormal, "Map Height"); break;
                 }
 
-                switch (selectedObject) {
+                switch (selectedObject)
+                {
                     case 0: DrawButton(FileWindowButton, Color_ButtonHot, fileWindow.getSelected()); break;
                     case 1: DrawButton(FileLoadButton, Color_ButtonHot, "Load"); break;
                     case 2: DrawButton(SerialWindowButton, Color_ButtonHot, serialWindow.getSelected()); break;
@@ -680,7 +795,8 @@ namespace Loader {
             }
         }
 
-        void Redraw() {
+        void Redraw()
+        {
             NCurses.TouchWindow(MainWindow);
             NCurses.WindowRefresh(MainWindow);
 
@@ -731,13 +847,15 @@ namespace Loader {
             NCurses.WindowRefresh(ClearHeightButton);
         }
 
-        void DrawButton(IntPtr win, uint color, string text) {
+        void DrawButton(IntPtr win, uint color, string text)
+        {
             NCurses.WindowBackground(win, color);
             NCurses.MoveWindowAddString(win, 0, 1, text);
             NCurses.WindowRefresh(win);
         }
 
-        void DrawStatusWindow() {
+        void DrawStatusWindow()
+        {
             int top = 0;
             int left = 0;
 
@@ -795,7 +913,8 @@ namespace Loader {
             if (l > 19) NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 19 + 2, status[19]);
             if (l > 20) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 19, status[20]);
             if (l > 21) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 19 + 2, status[21]);
-            if (l > 22) {
+            if (l > 22)
+            {
                 int functioncode = int.Parse(status[22]);
                 if (functioncode == 0) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Idle".PadLeft(13, ' '));
                 if (functioncode == 1) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Waiting".PadLeft(13, ' '));
@@ -807,7 +926,8 @@ namespace Loader {
             if (l > 23) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 42, status[23].PadLeft(8, ' '));
 
         }
-        void DrawMainWindow() {
+        void DrawMainWindow()
+        {
             int top = 1;
             int left = 0;
 
@@ -837,7 +957,8 @@ namespace Loader {
             NCurses.MoveWindowAddString(MainWindow, top + 10, left + 5, "home time:");
         }
 
-        void DrawMainWindowFileInfo() {
+        void DrawMainWindowFileInfo()
+        {
             int top = 0;
             int left = 0;
             NCurses.WindowAttributeSet(MainWindow, Color_MainWindowColor);
