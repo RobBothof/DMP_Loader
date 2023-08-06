@@ -23,7 +23,13 @@ namespace Loader
         MapHeight = 0xF3,
         Stop = 0xF4,
         EOF = 0xF5,
-        ClearHeight = 0xF6
+        ClearHeight = 0xF6,
+        Zero = 0xF7,
+        ZUp = 0xF8,
+        ZDown = 0xF9,
+        SetPenUp = 0xFA,
+        SetPenMin = 0xFB,
+        SetPenMax = 0xFC
     }
 
     class Program
@@ -50,6 +56,13 @@ namespace Loader
         private static IntPtr ClearHeightButton;
         private static IntPtr StopButton;
         private static IntPtr PaintButton;
+        private static IntPtr ZeroButton;
+
+        private static IntPtr ZUpButton;
+        private static IntPtr ZDownButton;
+        private static IntPtr SetPenUpButton;
+        private static IntPtr SetPenMinButton;
+        private static IntPtr SetPenMaxButton;
 
         private static IntPtr StatusWindow;
 
@@ -484,6 +497,25 @@ namespace Loader
 
             ClearHeightButton = NCurses.NewWindow(1, 14, 16, 19);
             DrawButton(ClearHeightButton, Color_ButtonNormal, "Clear Height");
+
+            ZeroButton = NCurses.NewWindow(1, 6, 13, 10);
+            DrawButton(ZeroButton, Color_ButtonNormal, "Zero");
+
+            ZUpButton = NCurses.NewWindow(1, 6, 16, 5);
+            DrawButton(ZUpButton, Color_ButtonNormal, "Z Up");
+
+            ZDownButton = NCurses.NewWindow(1, 8, 18, 5);
+            DrawButton(ZDownButton, Color_ButtonNormal, "Z Down");
+
+            SetPenUpButton = NCurses.NewWindow(1, 8, 18, 18);
+            DrawButton(SetPenUpButton, Color_ButtonNormal, "Set Up");
+
+            SetPenMinButton = NCurses.NewWindow(1, 9, 18, 27);
+            DrawButton(SetPenMinButton, Color_ButtonNormal, "Set Min");
+
+            SetPenMaxButton = NCurses.NewWindow(1, 9, 18, 37);
+            DrawButton(SetPenMaxButton, Color_ButtonNormal, "Set Max");
+
         }
 
         void Resize()
@@ -548,45 +580,57 @@ namespace Loader
                     { //keydown
                         switch (selectedObject)
                         {
-                            case 0: selectedObject = 2; break;
-                            case 1: selectedObject = 4; break;
-                            case 2: selectedObject = 5; break;
-                            case 3: selectedObject = 8; break;
-                            case 4: selectedObject = 9; break;
-                            case 5: selectedObject = 6; break;
-                            case 6: selectedObject = 10; break;
-                            case 7: selectedObject = 10; break;
-                            case 8: selectedObject = 11; break;
-                            case 9: selectedObject = 11; break;
-                            case 10: selectedObject = 0; break;
-                            case 11: selectedObject = 1; break;
+                            case 0: selectedObject = 2; break;      // File Select
+                            case 1: selectedObject = 4; break;      // Load
+                            case 2: selectedObject = 5; break;      // Serial Select
+                            case 3: selectedObject = 9; break;      // Open
+                            case 4: selectedObject = 10; break;     // Close
+                            case 5: selectedObject = 6; break;      // Refresh
+                            case 6: selectedObject = 11; break;     // Zero
+                            case 7: selectedObject = 12; break;     // Paint
+                            case 8: selectedObject = 12; break;     // Stop
+                            case 9: selectedObject = 13; break;     // Reset
+                            case 10: selectedObject = 13; break;    // Home
+                            case 11: selectedObject = 14; break;    // Z Up 
+                            case 12: selectedObject = 15; break;    // Clear Height 
+                            case 13: selectedObject = 17; break;     // Map Height     
+                            case 14: selectedObject = 0; break;     // Z Down     
+                            case 15: selectedObject = 0; break;     // Set Up 
+                            case 16: selectedObject = 0; break;     // Set Min
+                            case 17: selectedObject = 1; break;     // Set Max
                         }
                     }
                     if (c == 65)
                     { //keyup
                         switch (selectedObject)
                         {
-                            case 0: selectedObject = 10; break;
-                            case 1: selectedObject = 11; break;
-                            case 2: selectedObject = 0; break;
-                            case 3: selectedObject = 1; break;
-                            case 4: selectedObject = 1; break;
-                            case 5: selectedObject = 2; break;
-                            case 6: selectedObject = 5; break;
-                            case 7: selectedObject = 2; break;
-                            case 8: selectedObject = 3; break;
-                            case 9: selectedObject = 4; break;
-                            case 10: selectedObject = 7; break;
-                            case 11: selectedObject = 9; break;
+                            case 0: selectedObject = 14; break;     // File Select
+                            case 1: selectedObject = 17; break;     // Load
+                            case 2: selectedObject = 0; break;      // Serial Select
+                            case 3: selectedObject = 1; break;      // Open
+                            case 4: selectedObject = 1; break;      // Close
+                            case 5: selectedObject = 2; break;      // Refresh
+                            case 6: selectedObject = 5; break;      // Zero
+                            case 7: selectedObject = 5; break;      // Paint
+                            case 8: selectedObject = 2; break;      // Stop
+                            case 9: selectedObject = 3; break;      // Reset
+                            case 10: selectedObject = 4; break;     // Home
+                            case 11: selectedObject = 6; break;     // Z Up
+                            case 12: selectedObject = 8; break;    // Clear Height
+                            case 13: selectedObject = 10; break;     // Map Height    
+                            case 14: selectedObject = 11; break;     // Z Down     
+                            case 15: selectedObject = 12; break;    // Set Up 
+                            case 16: selectedObject = 12; break;    // Set Min
+                            case 17: selectedObject = 13; break;    // Set Max
                         }
                     }
                     if (c == 9 || c == 67)
                     { // TAB or right
-                        selectedObject = (selectedObject + 1) % 12;
+                        selectedObject = (selectedObject + 1) % 18;
                     }
                     if (c == 90 || c == 68)
                     { //shifttab or left
-                        selectedObject = (selectedObject + 11) % 12;
+                        selectedObject = (selectedObject + 17) % 18;
                     }
 
                     if (c == 10)
@@ -649,34 +693,67 @@ namespace Loader
                                 }
                             case 6:
                                 {
-                                    sendCommand(CommandByte.Draw);
+                                    sendCommand(CommandByte.Zero);
                                     break;
                                 }
                             case 7:
                                 {
-                                    sendCommand(CommandByte.Stop);
+                                    sendCommand(CommandByte.Draw);
                                     break;
                                 }
                             case 8:
                                 {
-                                    sendCommand(CommandByte.Reset);
+                                    sendCommand(CommandByte.Stop);
                                     break;
                                 }
                             case 9:
                                 {
-                                    sendCommand(CommandByte.Home);
+                                    sendCommand(CommandByte.Reset);
                                     break;
                                 }
                             case 10:
                                 {
+                                    sendCommand(CommandByte.Home);
+                                    break;
+                                }
+                            case 12:
+                                {
                                     sendCommand(CommandByte.ClearHeight);
                                     break;
                                 }
-                            case 11:
+                            case 13:
                                 {
                                     sendCommand(CommandByte.MapHeight);
                                     break;
                                 }
+                            case 11:
+                                {
+                                    sendCommand(CommandByte.ZUp);
+                                    // serialMonitorAdd("Z+");
+                                    break;
+                                }
+                            case 14:
+                                {
+                                    sendCommand(CommandByte.ZDown);
+                                    // serialMonitorAdd("Z-");
+                                    break;
+                                }
+                            case 15:
+                                {
+                                    sendCommand(CommandByte.SetPenUp);
+                                    break;
+                                }
+                            case 16:
+                                {
+                                    sendCommand(CommandByte.SetPenMin);
+                                    break;
+                                }
+                            case 17:
+                                {
+                                    sendCommand(CommandByte.SetPenMax);
+                                    break;
+                                }
+
                         }
                     }
                 }
@@ -767,12 +844,18 @@ namespace Loader
                         }
                     case 4: DrawButton(SerialCloseButton, Color_ButtonNormal, "Close"); break;
                     case 5: DrawButton(RefreshButton, Color_ButtonNormal, "Refresh"); break;
-                    case 6: DrawButton(PaintButton, Color_ButtonNormal, "Paint"); break;
-                    case 7: DrawButton(StopButton, Color_ButtonNormal, "Stop"); break;
-                    case 8: DrawButton(ResetButton, Color_ButtonNormal, "Reset"); break;
-                    case 9: DrawButton(HomeButton, Color_ButtonNormal, "Home"); break;
-                    case 10: DrawButton(ClearHeightButton, Color_ButtonNormal, "Clear Height"); break;
-                    case 11: DrawButton(HeightButton, Color_ButtonNormal, "Map Height"); break;
+                    case 6: DrawButton(ZeroButton, Color_ButtonNormal, "Zero"); break;
+                    case 7: DrawButton(PaintButton, Color_ButtonNormal, "Paint"); break;
+                    case 8: DrawButton(StopButton, Color_ButtonNormal, "Stop"); break;
+                    case 9: DrawButton(ResetButton, Color_ButtonNormal, "Reset"); break;
+                    case 10: DrawButton(HomeButton, Color_ButtonNormal, "Home"); break;
+                    case 11: DrawButton(ZUpButton, Color_ButtonNormal, "Z Up"); break;
+                    case 12: DrawButton(ClearHeightButton, Color_ButtonNormal, "Clear Height"); break;
+                    case 13: DrawButton(HeightButton, Color_ButtonNormal, "Map Height"); break;
+                    case 14: DrawButton(ZDownButton, Color_ButtonNormal, "Z Down"); break;
+                    case 15: DrawButton(SetPenUpButton, Color_ButtonNormal, "Set Up"); break;
+                    case 16: DrawButton(SetPenMinButton, Color_ButtonNormal, "Set Min"); break;
+                    case 17: DrawButton(SetPenMaxButton, Color_ButtonNormal, "Set Max"); break;
                 }
 
                 switch (selectedObject)
@@ -783,13 +866,18 @@ namespace Loader
                     case 3: DrawButton(SerialOpenButton, Color_ButtonHot, "Open"); break;
                     case 4: DrawButton(SerialCloseButton, Color_ButtonHot, "Close"); break;
                     case 5: DrawButton(RefreshButton, Color_ButtonHot, "Refresh"); break;
-                    case 6: DrawButton(PaintButton, Color_ButtonHot, "Paint"); break;
-                    case 7: DrawButton(StopButton, Color_ButtonHot, "Stop"); break;
-                    case 8: DrawButton(ResetButton, Color_ButtonHot, "Reset"); break;
-                    case 9: DrawButton(HomeButton, Color_ButtonHot, "Home"); break;
-                    case 10: DrawButton(ClearHeightButton, Color_ButtonHot, "Clear Height"); break;
-                    case 11: DrawButton(HeightButton, Color_ButtonHot, "Map Height"); break;
-
+                    case 6: DrawButton(ZeroButton, Color_ButtonHot, "Zero"); break;
+                    case 7: DrawButton(PaintButton, Color_ButtonHot, "Paint"); break;
+                    case 8: DrawButton(StopButton, Color_ButtonHot, "Stop"); break;
+                    case 9: DrawButton(ResetButton, Color_ButtonHot, "Reset"); break;
+                    case 10: DrawButton(HomeButton, Color_ButtonHot, "Home"); break;
+                    case 11: DrawButton(ZUpButton, Color_ButtonHot, "Z Up"); break;
+                    case 12: DrawButton(ClearHeightButton, Color_ButtonHot, "Clear Height"); break;
+                    case 13: DrawButton(HeightButton, Color_ButtonHot, "Map Height"); break;
+                    case 14: DrawButton(ZDownButton, Color_ButtonHot, "Z Down"); break;
+                    case 15: DrawButton(SetPenUpButton, Color_ButtonHot, "Set Up"); break;
+                    case 16: DrawButton(SetPenMinButton, Color_ButtonHot, "Set Min"); break;
+                    case 17: DrawButton(SetPenMaxButton, Color_ButtonHot, "Set Max"); break;
                 }
                 lastselectedObject = selectedObject;
             }
@@ -834,6 +922,9 @@ namespace Loader
             NCurses.TouchWindow(ResetButton);
             NCurses.WindowRefresh(ResetButton);
 
+            NCurses.TouchWindow(ZeroButton);
+            NCurses.WindowRefresh(ZeroButton);
+
             NCurses.TouchWindow(StopButton);
             NCurses.WindowRefresh(StopButton);
 
@@ -845,6 +936,22 @@ namespace Loader
 
             NCurses.TouchWindow(ClearHeightButton);
             NCurses.WindowRefresh(ClearHeightButton);
+
+            NCurses.TouchWindow(ZUpButton);
+            NCurses.WindowRefresh(ZUpButton);
+
+            NCurses.TouchWindow(ZDownButton);
+            NCurses.WindowRefresh(ZDownButton);
+
+            NCurses.TouchWindow(SetPenUpButton);
+            NCurses.WindowRefresh(SetPenUpButton);
+
+            NCurses.TouchWindow(SetPenMinButton);
+            NCurses.WindowRefresh(SetPenMinButton);
+
+            NCurses.TouchWindow(SetPenMaxButton);
+            NCurses.WindowRefresh(SetPenMaxButton);
+
         }
 
         void DrawButton(IntPtr win, uint color, string text)
@@ -885,9 +992,14 @@ namespace Loader
             NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 26, "M5:");
 
             NCurses.MoveWindowAddString(StatusWindow, top, left + 42, "other");
-            NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 38, "24v:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 37, "24v:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 37, "line:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 37, "OD-Z:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 37, "OD-R:");
 
-            NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 37, "line:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 8 , left + 1, "Z-UP:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 9 , left + 1, "Z-Min:");
+            NCurses.MoveWindowAddString(StatusWindow, top + 10, left + 1, "Z-Max:");
 
             NCurses.WindowAttributeSet(StatusWindow, Color_MainWindowNormal);
             if (l > 1) NCurses.MoveWindowAddString(StatusWindow, top + 2, left + 4, status[2].PadLeft(9, ' '));
@@ -923,8 +1035,13 @@ namespace Loader
                 if (functioncode == 4) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Homing".PadLeft(13, ' '));
                 if (functioncode == 5) NCurses.MoveWindowAddString(StatusWindow, top + 6, left + 37, "Mapping".PadLeft(13, ' '));
             }
-            if (l > 23) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 42, status[23].PadLeft(8, ' '));
+            if (l > 23) NCurses.MoveWindowAddString(StatusWindow, top + 3, left + 42, status[23].PadLeft(8, ' '));
+            if (l > 24) NCurses.MoveWindowAddString(StatusWindow, top + 4, left + 42, status[24].PadLeft(8, ' '));
+            if (l > 25) NCurses.MoveWindowAddString(StatusWindow, top + 5, left + 42, status[25].PadLeft(8, ' '));
 
+            if (l > 26) NCurses.MoveWindowAddString(StatusWindow, top + 8 , left + 7, status[26].PadLeft(6, ' '));
+            if (l > 27) NCurses.MoveWindowAddString(StatusWindow, top + 9 , left + 7, status[27].PadLeft(6, ' '));
+            if (l > 28) NCurses.MoveWindowAddString(StatusWindow, top + 10, left + 7, status[28].PadLeft(6, ' '));
         }
         void DrawMainWindow()
         {
@@ -947,7 +1064,9 @@ namespace Loader
             NCurses.MoveWindowAddString(MainWindow, top + 12, left, "                                               >qu");
             NCurses.MoveWindowAddString(MainWindow, top + 13, left, "                                                 x");
             NCurses.MoveWindowAddString(MainWindow, top + 14, left, "                                                 x");
-            NCurses.MoveWindowAddString(MainWindow, top + 15, left, "                                               >qj");
+            NCurses.MoveWindowAddString(MainWindow, top + 15, left, "                                               >qu");
+            NCurses.MoveWindowAddString(MainWindow, top + 16, left, "                                                 x");
+            NCurses.MoveWindowAddString(MainWindow, top + 17, left, "                                               >qj");
 
             NCurses.WindowAttributeSet(MainWindow, Color_MainWindowNormal);
             NCurses.MoveWindowAddString(MainWindow, top + 6, left + 5, "filename:");
